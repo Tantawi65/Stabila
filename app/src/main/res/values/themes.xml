@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Window-level theme for the Activity before Compose takes over.
+        We use Theme.Material3.DayNight.NoActionBar as the base —
+        it matches our Material3 Compose setup and provides no ActionBar
+        (since the entire UI is Compose with its own navigation).
+        All visual theming is done in Compose via StabilaTheme.
+    -->
+    <style name="Theme.Stabila" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Window background matches our Zinc-950 background so there is no flash on launch -->
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:statusBarColor">@color/background</item>
+        <item name="android:navigationBarColor">@color/surface</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

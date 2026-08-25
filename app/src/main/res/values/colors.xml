@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        XML color resources for window-level theming (pre-Compose startup).
+        All in-app color tokens are defined in core/ui/Color.kt for Compose.
+        These two exist only so the Activity window matches before Compose renders.
+    -->
+    <color name="background">#09090B</color>  <!-- Zinc-950 -->
+    <color name="surface">#18181B</color>      <!-- Zinc-900 -->
+</resources>

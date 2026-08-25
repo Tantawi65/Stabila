@@ -1,0 +1,38 @@
+# Android build outputs
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+*.apk
+*.ap_
+*.aab
+
+# Module build directories
+app/build/
+core/build/
+feature/*/build/
+
+# Python virtual environments
+venv/
+venv2/
+__pycache__/
+*.pyc
+*.pyo
+
+# Model zips
+*.zip
+
+# Keystore files
+*.jks
+*.keystore
+
+# Gradle wrapper (keep gradlew but ignore jar)
+gradle/wrapper/gradle-wrapper.jar
+
+# Local configuration
+local.properties

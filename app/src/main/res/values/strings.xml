@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="app_name">Stabila</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_daily_test">Daily Test</string>
+    <string name="nav_camera">Camera</string>
+    <string name="nav_history">History</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Home Screen -->
+    <string name="home_greeting">Your Steadiest Day Yet</string>
+    <string name="home_tremor_score_label">Today\'s Tremor Score</string>
+    <string name="home_no_reading">No reading yet — take your daily test</string>
+    <string name="home_start_test">Start Daily Test</string>
+    <string name="home_open_camera">Open SteadyCam</string>
+
+    <!-- Daily Test -->
+    <string name="test_title">Daily Tremor Test</string>
+    <string name="test_phase_b_title">Holding Test</string>
+    <string name="test_phase_b_instruction">Hold the phone normally. Stay as relaxed as you can.</string>
+    <string name="test_phase_a_instruction">Place the phone flat on a table and rest your hand near it.</string>
+    <string name="test_countdown">Get ready…</string>
+    <string name="test_measuring">Measuring…</string>
+    <string name="test_complete">Test Complete</string>
+    <string name="test_result_amplitude">Amplitude</string>
+    <string name="test_result_frequency">Dominant Frequency</string>
+    <string name="test_result_score">Tremor Score</string>
+    <string name="test_action_done">Done</string>
+
+    <!-- Medication -->
+    <string name="medication_log_title">Medication Log</string>
+    <string name="medication_log_button">I just took my medication</string>
+    <string name="medication_name_hint">Medication name (optional)</string>
+    <string name="medication_dosage_hint">Dosage (optional)</string>
+    <string name="medication_tag_pre">pre-dose</string>
+    <string name="medication_tag_post">post-dose</string>
+    <string name="medication_saved">Medication logged</string>
+
+    <!-- Camera -->
+    <string name="camera_title">SteadyCam</string>
+    <string name="camera_arm_button">Hold to Arm</string>
+    <string name="camera_armed_hint">Release when ready — auto-captures at the steadiest moment</string>
+    <string name="camera_manual_capture">Capture Now</string>
+    <string name="camera_processing">Cleaning up photo…</string>
+    <string name="camera_permission_rationale">SteadyCam needs camera access to take tremor-timed photos. Your photos never leave your device.</string>
+    <string name="camera_permission_button">Grant Camera Access</string>
+
+    <!-- History -->
+    <string name="history_title">History</string>
+    <string name="history_empty">No readings yet. Take your daily test to start tracking.</string>
+    <string name="history_export_pdf">Export PDF Report</string>
+    <string name="history_filter_all">All</string>
+
+    <string name="history_filter_action">Action</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_debounce_label">Keyboard Debounce Window</string>
+    <string name="settings_sigma_label">Key Gravity Strength</string>
+    <string name="settings_autocorrect_label">Autocorrect Aggressiveness</string>
+    <string name="settings_camera_timeout_label">Camera Auto-Fire Timeout</string>
+    <string name="settings_privacy_label">Privacy &amp; Data</string>
+    <string name="settings_privacy_body">All processing happens on your device. No data is ever sent to the internet.</string>
+
+    <!-- Tremor Levels -->
+    <string name="tremor_stable">Stable</string>
+    <string name="tremor_elevated">Elevated</string>
+    <string name="tremor_severe">Severe</string>
+
+    <!-- Accessibility Service -->
+    <string name="accessibility_service_description">Stabila uses the Accessibility Service to provide a State-Based Auto-Scroll feature. This helps users with tremors navigate apps without needing to continuously drag the screen, and prevents accidental taps while scrolling.</string>
+
+    <!-- Errors / Generic -->
+    <string name="error_generic">Something went wrong. Please try again.</string>
+    <string name="loading">Loading…</string>
+</resources>
