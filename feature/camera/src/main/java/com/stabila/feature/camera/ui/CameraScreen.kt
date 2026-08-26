@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -145,14 +146,17 @@ fun CameraScreen(
     }
 
     // Instant Pro Mode Initialization & Restoration
-    LaunchedEffect(cameraControl, manualIso, uiState.cameraState) {
+    LaunchedEffect(cameraControl, manualIso, uiState.cameraState, uiState.isOutdoorBright) {
         val control = cameraControl ?: return@LaunchedEffect
         val ext = Camera2CameraControl.from(control)
 
         if (uiState.cameraState == CameraViewModel.CameraState.IDLE) {
+            // If it's a bright outdoor scene, use 1/1000s. Otherwise 1/250s.
+            val exposureTime = if (uiState.isOutdoorBright) 1_000_000L else 4_000_000L
+            
             val captureRequestOptions = CaptureRequestOptions.Builder()
                 .setCaptureRequestOption(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF)
-                .setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, 4_000_000L) // 1/250s
+                .setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, exposureTime)
                 .setCaptureRequestOption(CaptureRequest.SENSOR_SENSITIVITY, manualIso.toInt())
                 .build()
             ext.setCaptureRequestOptions(captureRequestOptions)
@@ -354,6 +358,11 @@ fun CameraScreen(
                                         cameraStateRef.latestNormalFrame = bitmap
                                     }
                                 }
+                                
+                                // While idle, run the AI + Luminance checks (doesn't block UI since it's on a background thread from CameraX)
+                                if (uiState.cameraState == CameraViewModel.CameraState.IDLE && bitmap != null) {
+                                    viewModel.updateSceneAnalysis(bitmap)
+                                }
                                 }
                                 imageProxy.close()
                             }
@@ -388,17 +397,34 @@ fun CameraScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Brightness label (left side)
-                    Text(
-                        text = "ISO ${manualIso.toInt()}",
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = (13 * adaptive.fontScale).sp,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.55f))
-                            .padding(horizontal = 12.dp, vertical = 6.dp)
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        // Brightness label (left side)
+                        Text(
+                            text = "ISO ${manualIso.toInt()}",
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = (13 * adaptive.fontScale).sp,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.55f))
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        )
+                        
+                        // High Light indicator
+                        if (uiState.isOutdoorBright) {
+                            androidx.compose.foundation.layout.Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = "☀ High Light",
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = (12 * adaptive.fontScale).sp,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(Color(0xFFE6A000)) // Sunny orange
+                                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                            )
+                        }
+                    }
                     // Compare toggle (right side)
                     Box(
                         modifier = Modifier

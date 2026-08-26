@@ -47,11 +47,21 @@ class CameraViewModel @Inject constructor(
         val resultBitmap: Bitmap? = null,
         val savedToGallery: Boolean = false,
         val isCompareMode: Boolean = false,
-        val originalBitmap: Bitmap? = null
+        val originalBitmap: Bitmap? = null,
+        val isOutdoorBright: Boolean = false
     )
 
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+    
+    private val sceneAnalyzer = com.stabila.feature.camera.sensor.SceneAnalyzer()
+
+    fun updateSceneAnalysis(bitmap: Bitmap) {
+        val isOutdoorBright = sceneAnalyzer.isBrightScene(bitmap)
+        if (_uiState.value.isOutdoorBright != isOutdoorBright) {
+            _uiState.value = _uiState.value.copy(isOutdoorBright = isOutdoorBright)
+        }
+    }
 
     fun captureStarted() {
         _uiState.value = _uiState.value.copy(cameraState = CameraState.STABILIZING)
