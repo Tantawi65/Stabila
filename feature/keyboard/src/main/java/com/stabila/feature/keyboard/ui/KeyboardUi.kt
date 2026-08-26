@@ -155,28 +155,30 @@ private fun NormalKeyboard(
             modifier = Modifier.fillMaxWidth().weight(1f).padding(bottom = 8.dp),
             horizontalArrangement = Arrangement.Center
         ) {
-            ActionKey(
-                modifier = Modifier.weight(1.5f).padding(horizontal = 2.dp),
-                onClick = { 
-                    if (symbolState == 0) {
-                        onShiftChange(!isShift)
-                    } else if (symbolState == 1) {
-                        onSymbolStateChange(2)
-                    } else {
-                        onSymbolStateChange(1)
+            if (!(isArabic && symbolState == 0)) {
+                ActionKey(
+                    modifier = Modifier.weight(1.5f).padding(horizontal = 2.dp),
+                    onClick = { 
+                        if (symbolState == 0) {
+                            onShiftChange(!isShift)
+                        } else if (symbolState == 1) {
+                            onSymbolStateChange(2)
+                        } else {
+                            onSymbolStateChange(1)
+                        }
                     }
-                }
-            ) {
-                if (symbolState == 0) {
-                    Icon(
-                        Icons.Default.KeyboardArrowUp, 
-                        contentDescription = "Shift",
-                        tint = if (isShift) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                    )
-                } else if (symbolState == 1) {
-                    Text("=\\<", color = MaterialTheme.colorScheme.onSurface)
-                } else {
-                    Text("?123", color = MaterialTheme.colorScheme.onSurface)
+                ) {
+                    if (symbolState == 0) {
+                        Icon(
+                            Icons.Default.KeyboardArrowUp, 
+                            contentDescription = "Shift",
+                            tint = if (isShift) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                        )
+                    } else if (symbolState == 1) {
+                        Text("=\\<", color = MaterialTheme.colorScheme.onSurface)
+                    } else {
+                        Text("?123", color = MaterialTheme.colorScheme.onSurface)
+                    }
                 }
             }
             
