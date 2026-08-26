@@ -40,6 +40,10 @@ fun StabilaKeyboardLayout(
     var currentState by remember { mutableStateOf(KeyboardState.NORMAL) }
     var magnifiedCenterKey by remember { mutableStateOf(' ') }
 
+    // Hoist state so it's not lost when NormalKeyboard is removed from composition during magnification
+    var isShift by remember { mutableStateOf(false) }
+    var isSymbols by remember { mutableStateOf(false) }
+
     val targetHeight = if (currentState == KeyboardState.MAGNIFIED) 450.dp else 300.dp
     val animatedHeight by animateDpAsState(targetValue = targetHeight, label = "KeyboardHeight")
 
@@ -53,6 +57,10 @@ fun StabilaKeyboardLayout(
             when (state) {
                 KeyboardState.NORMAL -> {
                     NormalKeyboard(
+                        isShift = isShift,
+                        isSymbols = isSymbols,
+                        onShiftChange = { isShift = it },
+                        onSymbolsChange = { isSymbols = it },
                         onCharPress = { char ->
                             if (useMagnifier) {
                                 magnifiedCenterKey = char
@@ -85,14 +93,15 @@ fun StabilaKeyboardLayout(
 
 @Composable
 private fun NormalKeyboard(
+    isShift: Boolean,
+    isSymbols: Boolean,
+    onShiftChange: (Boolean) -> Unit,
+    onSymbolsChange: (Boolean) -> Unit,
     onCharPress: (Char) -> Unit,
     onDelete: () -> Unit,
     onSpace: () -> Unit,
     onEnter: () -> Unit
 ) {
-    var isShift by remember { mutableStateOf(false) }
-    var isSymbols by remember { mutableStateOf(false) }
-
     val letterRows = listOf(
         "qwertyuiop".toList(),
         "asdfghjkl".toList(),
@@ -127,7 +136,7 @@ private fun NormalKeyboard(
                 modifier = Modifier.weight(1.5f).padding(horizontal = 2.dp),
                 onClick = { 
                     if (!isSymbols) {
-                        isShift = !isShift 
+                        onShiftChange(!isShift)
                     }
                 }
             ) {
@@ -148,7 +157,7 @@ private fun NormalKeyboard(
                     modifier = Modifier.weight(1f).padding(horizontal = 2.dp).fillMaxHeight(),
                     onClick = { 
                         onCharPress(if (isShift && char.isLetter()) char.uppercaseChar() else char) 
-                        if (isShift) isShift = false 
+                        if (isShift) onShiftChange(false)
                     }
                 )
             }
@@ -168,7 +177,7 @@ private fun NormalKeyboard(
         ) {
             ActionKey(
                 modifier = Modifier.weight(1.5f).padding(horizontal = 2.dp),
-                onClick = { isSymbols = !isSymbols }
+                onClick = { onSymbolsChange(!isSymbols) }
             ) {
                 Text(if (isSymbols) "ABC" else "?123", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
             }
@@ -255,6 +264,7 @@ private fun MagnifiedKeyboard(
             .padding(4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
+        val currentOnCancel by rememberUpdatedState(onCancel)
         // Top instruction / cancel bar
         Row(
             modifier = Modifier
@@ -265,7 +275,7 @@ private fun MagnifiedKeyboard(
                 .pointerInput(Unit) {
                     awaitEachGesture {
                         awaitFirstDown().consume()
-                        onCancel()
+                        currentOnCancel()
                     }
                 },
             horizontalArrangement = Arrangement.Center,
@@ -305,6 +315,7 @@ private fun ActionKey(
     onClick: () -> Unit,
     content: @Composable BoxScope.() -> Unit
 ) {
+    val currentOnClick by rememberUpdatedState(onClick)
     Box(
         modifier = modifier
             .fillMaxHeight()
@@ -314,7 +325,7 @@ private fun ActionKey(
                 awaitEachGesture {
                     val down = awaitFirstDown()
                     down.consume()
-                    onClick()
+                    currentOnClick()
                 }
             },
         contentAlignment = Alignment.Center,
@@ -329,6 +340,7 @@ private fun KeyButton(
     textStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.titleLarge,
     onClick: () -> Unit
 ) {
+    val currentOnClick by rememberUpdatedState(onClick)
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(8.dp))
@@ -337,7 +349,7 @@ private fun KeyButton(
                 awaitEachGesture {
                     val down = awaitFirstDown()
                     down.consume()
-                    onClick()
+                    currentOnClick()
                 }
             },
         contentAlignment = Alignment.Center
