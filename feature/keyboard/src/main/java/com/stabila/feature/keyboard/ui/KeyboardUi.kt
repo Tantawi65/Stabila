@@ -77,6 +77,7 @@ fun StabilaKeyboardLayout(
                 KeyboardState.MAGNIFIED -> {
                     MagnifiedKeyboard(
                         centerChar = magnifiedCenterKey,
+                        symbolState = symbolState,
                         onCharSelected = { char ->
                             onKeyPress(char.toString())
                             currentState = KeyboardState.NORMAL
@@ -263,11 +264,12 @@ private fun ColumnScope.KeyboardRow(
 @Composable
 private fun MagnifiedKeyboard(
     centerChar: Char,
+    symbolState: Int,
     onCharSelected: (Char) -> Unit,
     onCancel: () -> Unit
 ) {
-    val neighbors = getNeighbors(centerChar)
-    val chars = neighbors.flatten().filterNotNull()
+    val neighbors = getNeighbors(centerChar, symbolState)
+    val chars = neighbors.flatten().filterNotNull().filter { it != ' ' }
     
     val numRows = when (chars.size) {
         in 1..3 -> 1
@@ -383,25 +385,36 @@ private fun KeyButton(
     }
 }
 
-private fun getNeighbors(center: Char): List<List<Char?>> {
+private fun getNeighbors(center: Char, symbolState: Int): List<List<Char?>> {
     val layout = listOf(
         "qwertyuiop",
         "asdfghjkl",
         "zxcvbnm",
+        ",     .",
         "1234567890",
         "@#£_&-+()\"",
         "*\"':;!?~`|",
+        ",     .",
         "~`|•√π÷×¶∆",
         "£¢€¥^°={}\\",
-        "%©®™✓[]<>"
+        "%©®™✓[]<> ",
+        ",     ."
     )
     
     val lowerCenter = center.lowercaseChar()
     val isUpper = center.isUpperCase()
     
+    // Restrict search to the active symbol group
+    val startRow = when (symbolState) {
+        1 -> 4
+        2 -> 8
+        else -> 0
+    }
+    val endRow = startRow + 3
+    
     var r = -1
     var c = -1
-    for (i in layout.indices) {
+    for (i in startRow..endRow) {
         val idx = layout[i].indexOf(lowerCenter)
         if (idx != -1) {
             r = i
@@ -421,20 +434,9 @@ private fun getNeighbors(center: Char): List<List<Char?>> {
         val rowList = mutableListOf<Char?>()
         for (j in c - 1..c + 1) {
             if (i in layout.indices && j in layout[i].indices) {
-                // Prevent showing letters for symbols and vice versa
-                // Letters: rows 0-2
-                // Symbols 1: rows 3-5
-                // Symbols 2: rows 6-8
-                val currentGroup = when (r) {
-                    in 0..2 -> 0
-                    in 3..5 -> 1
-                    else -> 2
-                }
-                val neighborGroup = when (i) {
-                    in 0..2 -> 0
-                    in 3..5 -> 1
-                    else -> 2
-                }
+                // Prevent crossing between letters, symbols1, symbols2
+                val currentGroup = r / 4
+                val neighborGroup = i / 4
                 
                 if (currentGroup != neighborGroup) {
                     rowList.add(null)
