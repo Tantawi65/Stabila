@@ -42,7 +42,7 @@ fun StabilaKeyboardLayout(
 
     // Hoist state so it's not lost when NormalKeyboard is removed from composition during magnification
     var isShift by remember { mutableStateOf(false) }
-    var isSymbols by remember { mutableStateOf(false) }
+    var symbolState by remember { mutableIntStateOf(0) } // 0=letters, 1=symbols1, 2=symbols2
 
     val targetHeight = if (currentState == KeyboardState.MAGNIFIED) 450.dp else 300.dp
     val animatedHeight by animateDpAsState(targetValue = targetHeight, label = "KeyboardHeight")
@@ -58,9 +58,9 @@ fun StabilaKeyboardLayout(
                 KeyboardState.NORMAL -> {
                     NormalKeyboard(
                         isShift = isShift,
-                        isSymbols = isSymbols,
+                        symbolState = symbolState,
                         onShiftChange = { isShift = it },
-                        onSymbolsChange = { isSymbols = it },
+                        onSymbolStateChange = { symbolState = it },
                         onCharPress = { char ->
                             if (useMagnifier) {
                                 magnifiedCenterKey = char
@@ -94,9 +94,9 @@ fun StabilaKeyboardLayout(
 @Composable
 private fun NormalKeyboard(
     isShift: Boolean,
-    isSymbols: Boolean,
+    symbolState: Int,
     onShiftChange: (Boolean) -> Unit,
-    onSymbolsChange: (Boolean) -> Unit,
+    onSymbolStateChange: (Int) -> Unit,
     onCharPress: (Char) -> Unit,
     onDelete: () -> Unit,
     onSpace: () -> Unit,
@@ -107,13 +107,22 @@ private fun NormalKeyboard(
         "asdfghjkl".toList(),
         "zxcvbnm".toList()
     )
-    val symbolRows = listOf(
+    val symbolRows1 = listOf(
         "1234567890".toList(),
         "@#£_&-+()\"".toList(),
         "*\"':;!?~`|".toList()
     )
+    val symbolRows2 = listOf(
+        "~`|•√π÷×¶∆".toList(),
+        "£¢€¥^°={}\\".toList(),
+        "%©®™✓[]<> ".toList() // Add space at the end to make it 10 chars
+    )
 
-    val currentRows = if (isSymbols) symbolRows else letterRows
+    val currentRows = when (symbolState) {
+        1 -> symbolRows1
+        2 -> symbolRows2
+        else -> letterRows
+    }
 
     Column(
         modifier = Modifier
@@ -135,31 +144,41 @@ private fun NormalKeyboard(
             ActionKey(
                 modifier = Modifier.weight(1.5f).padding(horizontal = 2.dp),
                 onClick = { 
-                    if (!isSymbols) {
+                    if (symbolState == 0) {
                         onShiftChange(!isShift)
+                    } else if (symbolState == 1) {
+                        onSymbolStateChange(2)
+                    } else {
+                        onSymbolStateChange(1)
                     }
                 }
             ) {
-                if (!isSymbols) {
+                if (symbolState == 0) {
                     Icon(
                         Icons.Default.KeyboardArrowUp, 
                         contentDescription = "Shift",
                         tint = if (isShift) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                     )
-                } else {
+                } else if (symbolState == 1) {
                     Text("=\\<", color = MaterialTheme.colorScheme.onSurface)
+                } else {
+                    Text("?123", color = MaterialTheme.colorScheme.onSurface)
                 }
             }
             
             currentRows[2].forEach { char ->
-                KeyButton(
-                    text = if (isShift && char.isLetter()) char.uppercase() else char.toString(),
-                    modifier = Modifier.weight(1f).padding(horizontal = 2.dp).fillMaxHeight(),
-                    onClick = { 
-                        onCharPress(if (isShift && char.isLetter()) char.uppercaseChar() else char) 
-                        if (isShift) onShiftChange(false)
-                    }
-                )
+                if (char == ' ') {
+                    Spacer(modifier = Modifier.weight(1f).padding(horizontal = 2.dp))
+                } else {
+                    KeyButton(
+                        text = if (isShift && char.isLetter()) char.uppercase() else char.toString(),
+                        modifier = Modifier.weight(1f).padding(horizontal = 2.dp).fillMaxHeight(),
+                        onClick = { 
+                            onCharPress(if (isShift && char.isLetter()) char.uppercaseChar() else char) 
+                            if (isShift) onShiftChange(false)
+                        }
+                    )
+                }
             }
             
             ActionKey(
@@ -177,9 +196,11 @@ private fun NormalKeyboard(
         ) {
             ActionKey(
                 modifier = Modifier.weight(1.5f).padding(horizontal = 2.dp),
-                onClick = { onSymbolsChange(!isSymbols) }
+                onClick = { 
+                    if (symbolState == 0) onSymbolStateChange(1) else onSymbolStateChange(0) 
+                }
             ) {
-                Text(if (isSymbols) "ABC" else "?123", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                Text(if (symbolState != 0) "ABC" else "?123", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
             }
             
             KeyButton(
@@ -369,7 +390,10 @@ private fun getNeighbors(center: Char): List<List<Char?>> {
         "zxcvbnm",
         "1234567890",
         "@#£_&-+()\"",
-        "*\"':;!?~`|"
+        "*\"':;!?~`|",
+        "~`|•√π÷×¶∆",
+        "£¢€¥^°={}\\",
+        "%©®™✓[]<>"
     )
     
     val lowerCenter = center.lowercaseChar()
@@ -397,9 +421,22 @@ private fun getNeighbors(center: Char): List<List<Char?>> {
         val rowList = mutableListOf<Char?>()
         for (j in c - 1..c + 1) {
             if (i in layout.indices && j in layout[i].indices) {
-                if (r <= 2 && i > 2) {
-                    rowList.add(null)
-                } else if (r > 2 && i <= 2) {
+                // Prevent showing letters for symbols and vice versa
+                // Letters: rows 0-2
+                // Symbols 1: rows 3-5
+                // Symbols 2: rows 6-8
+                val currentGroup = when (r) {
+                    in 0..2 -> 0
+                    in 3..5 -> 1
+                    else -> 2
+                }
+                val neighborGroup = when (i) {
+                    in 0..2 -> 0
+                    in 3..5 -> 1
+                    else -> 2
+                }
+                
+                if (currentGroup != neighborGroup) {
                     rowList.add(null)
                 } else {
                     val char = layout[i][j]
