@@ -60,7 +60,8 @@ fun HomeScreen(
     onNavigateToDailyTest: () -> Unit,
     onNavigateToCamera: () -> Unit,
     onNavigateToHistory: () -> Unit,
-    onNavigateToSettings: () -> Unit
+    onNavigateToSettings: () -> Unit,
+    onNavigateToKeyboardSetup: () -> Unit
 ) {
     val latestScore by viewModel.latestScore.collectAsState()
     val adaptive = LocalAdaptiveParams.current
@@ -318,6 +319,15 @@ fun HomeScreen(
                     adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
                     onClick = onNavigateToSettings
                 )
+                ActionCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    title = "Adaptive Keyboard",
+                    subtitle = "Setup & enable",
+                    icon = Icons.Default.Keyboard,
+                    accentColor = MaterialTheme.colorScheme.primary,
+                    adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
+                    onClick = onNavigateToKeyboardSetup
+                )
             }
         } else {
             // Two per row
@@ -376,6 +386,15 @@ fun HomeScreen(
                     accentColor = Amber500,
                     adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
                     onClick = onNavigateToSettings
+                )
+                ActionCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    title = "Adaptive Keyboard",
+                    subtitle = "Setup & enable",
+                    icon = Icons.Default.Keyboard,
+                    accentColor = MaterialTheme.colorScheme.primary,
+                    adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
+                    onClick = onNavigateToKeyboardSetup
                 )
             }
         }

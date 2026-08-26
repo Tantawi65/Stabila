@@ -1,0 +1,403 @@
+package com.stabila.feature.keyboard.ui
+
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Backspace
+import androidx.compose.material.icons.filled.SpaceBar
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.KeyboardReturn
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+enum class KeyboardState { NORMAL, MAGNIFIED }
+
+@OptIn(ExperimentalAnimationApi::class)
+@Composable
+fun StabilaKeyboardLayout(
+    tremorScore: Float,
+    onKeyPress: (String) -> Unit,
+    onDelete: () -> Unit,
+    onEnter: () -> Unit
+) {
+    val useMagnifier = tremorScore > 20f
+    var currentState by remember { mutableStateOf(KeyboardState.NORMAL) }
+    var magnifiedCenterKey by remember { mutableStateOf(' ') }
+
+    val targetHeight = if (currentState == KeyboardState.MAGNIFIED) 450.dp else 300.dp
+    val animatedHeight by animateDpAsState(targetValue = targetHeight, label = "KeyboardHeight")
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(animatedHeight)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        AnimatedContent(targetState = currentState, label = "KeyboardState") { state ->
+            when (state) {
+                KeyboardState.NORMAL -> {
+                    NormalKeyboard(
+                        onCharPress = { char ->
+                            if (useMagnifier) {
+                                magnifiedCenterKey = char
+                                currentState = KeyboardState.MAGNIFIED
+                            } else {
+                                onKeyPress(char.toString())
+                            }
+                        },
+                        onDelete = onDelete,
+                        onSpace = { onKeyPress(" ") },
+                        onEnter = onEnter
+                    )
+                }
+                KeyboardState.MAGNIFIED -> {
+                    MagnifiedKeyboard(
+                        centerChar = magnifiedCenterKey,
+                        onCharSelected = { char ->
+                            onKeyPress(char.toString())
+                            currentState = KeyboardState.NORMAL
+                        },
+                        onCancel = {
+                            currentState = KeyboardState.NORMAL
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NormalKeyboard(
+    onCharPress: (Char) -> Unit,
+    onDelete: () -> Unit,
+    onSpace: () -> Unit,
+    onEnter: () -> Unit
+) {
+    var isShift by remember { mutableStateOf(false) }
+    var isSymbols by remember { mutableStateOf(false) }
+
+    val letterRows = listOf(
+        "qwertyuiop".toList(),
+        "asdfghjkl".toList(),
+        "zxcvbnm".toList()
+    )
+    val symbolRows = listOf(
+        "1234567890".toList(),
+        "@#£_&-+()\"".toList(),
+        "*\"':;!?~`|".toList()
+    )
+
+    val currentRows = if (isSymbols) symbolRows else letterRows
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(vertical = 8.dp, horizontal = 4.dp),
+        verticalArrangement = Arrangement.SpaceEvenly
+    ) {
+        // Row 1
+        KeyboardRow(currentRows[0], isShift, onCharPress)
+        
+        // Row 2
+        KeyboardRow(currentRows[1], isShift, onCharPress)
+        
+        // Row 3
+        Row(
+            modifier = Modifier.fillMaxWidth().weight(1f).padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            ActionKey(
+                modifier = Modifier.weight(1.5f).padding(horizontal = 2.dp),
+                onClick = { 
+                    if (!isSymbols) {
+                        isShift = !isShift 
+                    }
+                }
+            ) {
+                if (!isSymbols) {
+                    Icon(
+                        Icons.Default.KeyboardArrowUp, 
+                        contentDescription = "Shift",
+                        tint = if (isShift) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                    )
+                } else {
+                    Text("=\\<", color = MaterialTheme.colorScheme.onSurface)
+                }
+            }
+            
+            currentRows[2].forEach { char ->
+                KeyButton(
+                    text = if (isShift && char.isLetter()) char.uppercase() else char.toString(),
+                    modifier = Modifier.weight(1f).padding(horizontal = 2.dp).fillMaxHeight(),
+                    onClick = { 
+                        onCharPress(if (isShift && char.isLetter()) char.uppercaseChar() else char) 
+                        if (isShift) isShift = false 
+                    }
+                )
+            }
+            
+            ActionKey(
+                modifier = Modifier.weight(1.5f).padding(horizontal = 2.dp),
+                onClick = onDelete
+            ) {
+                Icon(Icons.AutoMirrored.Filled.Backspace, contentDescription = "Delete")
+            }
+        }
+        
+        // Row 4
+        Row(
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            ActionKey(
+                modifier = Modifier.weight(1.5f).padding(horizontal = 2.dp),
+                onClick = { isSymbols = !isSymbols }
+            ) {
+                Text(if (isSymbols) "ABC" else "?123", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+            }
+            
+            KeyButton(
+                text = ",",
+                modifier = Modifier.weight(1f).padding(horizontal = 2.dp).fillMaxHeight(),
+                onClick = { onCharPress(',') }
+            )
+            
+            ActionKey(
+                modifier = Modifier.weight(4f).padding(horizontal = 2.dp),
+                onClick = onSpace
+            ) {
+                Icon(Icons.Default.SpaceBar, contentDescription = "Space")
+            }
+            
+            KeyButton(
+                text = ".",
+                modifier = Modifier.weight(1f).padding(horizontal = 2.dp).fillMaxHeight(),
+                onClick = { onCharPress('.') }
+            )
+            
+            ActionKey(
+                modifier = Modifier.weight(1.5f).padding(horizontal = 2.dp),
+                backgroundColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                onClick = onEnter
+            ) {
+                Icon(Icons.Default.KeyboardReturn, contentDescription = "Enter", tint = MaterialTheme.colorScheme.onPrimary)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.KeyboardRow(
+    row: List<Char>,
+    isShift: Boolean,
+    onCharPress: (Char) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().weight(1f).padding(bottom = 8.dp),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        if (row.size == 9) { 
+            Spacer(modifier = Modifier.weight(0.5f))
+        }
+        row.forEach { char ->
+            KeyButton(
+                text = if (isShift && char.isLetter()) char.uppercase() else char.toString(),
+                modifier = Modifier.weight(1f).padding(horizontal = 2.dp).fillMaxHeight(),
+                onClick = { onCharPress(if (isShift && char.isLetter()) char.uppercaseChar() else char) }
+            )
+        }
+        if (row.size == 9) {
+            Spacer(modifier = Modifier.weight(0.5f))
+        }
+    }
+}
+
+@Composable
+private fun MagnifiedKeyboard(
+    centerChar: Char,
+    onCharSelected: (Char) -> Unit,
+    onCancel: () -> Unit
+) {
+    val neighbors = getNeighbors(centerChar)
+    val chars = neighbors.flatten().filterNotNull()
+    
+    val numRows = when (chars.size) {
+        in 1..3 -> 1
+        4 -> 2
+        in 5..6 -> 2
+        else -> 3
+    }
+    
+    val itemsPerRow = kotlin.math.ceil(chars.size.toFloat() / numRows).toInt()
+    val chunked = chars.chunked(if (itemsPerRow > 0) itemsPerRow else 1)
+    
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        // Top instruction / cancel bar
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(0.4f)
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.surface)
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        awaitFirstDown().consume()
+                        onCancel()
+                    }
+                },
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Default.ArrowDownward, contentDescription = "Tap to Cancel")
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Cancel (Tap here)", style = MaterialTheme.typography.bodyMedium)
+        }
+
+        // Dynamic Grid
+        chunked.forEach { rowChars ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                rowChars.forEach { char ->
+                    KeyButton(
+                        text = char.toString(),
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                        textStyle = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold, fontSize = 48.sp),
+                        onClick = { onCharSelected(char) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActionKey(
+    modifier: Modifier = Modifier,
+    backgroundColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surface,
+    contentColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface,
+    onClick: () -> Unit,
+    content: @Composable BoxScope.() -> Unit
+) {
+    Box(
+        modifier = modifier
+            .fillMaxHeight()
+            .clip(RoundedCornerShape(8.dp))
+            .background(backgroundColor)
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    down.consume()
+                    onClick()
+                }
+            },
+        contentAlignment = Alignment.Center,
+        content = content
+    )
+}
+
+@Composable
+private fun KeyButton(
+    text: String,
+    modifier: Modifier = Modifier,
+    textStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.titleLarge,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    down.consume()
+                    onClick()
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = textStyle,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+private fun getNeighbors(center: Char): List<List<Char?>> {
+    val layout = listOf(
+        "qwertyuiop",
+        "asdfghjkl",
+        "zxcvbnm",
+        "1234567890",
+        "@#£_&-+()\"",
+        "*\"':;!?~`|"
+    )
+    
+    val lowerCenter = center.lowercaseChar()
+    val isUpper = center.isUpperCase()
+    
+    var r = -1
+    var c = -1
+    for (i in layout.indices) {
+        val idx = layout[i].indexOf(lowerCenter)
+        if (idx != -1) {
+            r = i
+            c = idx
+            break
+        }
+    }
+    
+    if (r == -1) {
+        val grid = MutableList(3) { MutableList<Char?>(3) { null } }
+        grid[1][1] = center
+        return grid
+    }
+
+    val grid = mutableListOf<List<Char?>>()
+    for (i in r - 1..r + 1) {
+        val rowList = mutableListOf<Char?>()
+        for (j in c - 1..c + 1) {
+            if (i in layout.indices && j in layout[i].indices) {
+                if (r <= 2 && i > 2) {
+                    rowList.add(null)
+                } else if (r > 2 && i <= 2) {
+                    rowList.add(null)
+                } else {
+                    val char = layout[i][j]
+                    rowList.add(if (isUpper && char.isLetter()) char.uppercaseChar() else char)
+                }
+            } else {
+                rowList.add(null)
+            }
+        }
+        grid.add(rowList)
+    }
+    return grid
+}

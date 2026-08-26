@@ -48,6 +48,7 @@ dependencies {
     implementation(project(":feature:dailytest"))
     implementation(project(":feature:history"))
     implementation(project(":feature:camera"))
+    implementation(project(":feature:keyboard"))
 
 
     implementation(libs.androidx.core.ktx)

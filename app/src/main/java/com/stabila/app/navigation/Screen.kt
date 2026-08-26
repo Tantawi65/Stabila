@@ -12,4 +12,5 @@ sealed class Screen(val route: String) {
     object Camera     : Screen("camera")
     object History    : Screen("history")
     object Settings   : Screen("settings")
+    object KeyboardSetup : Screen("keyboard_setup")
 }

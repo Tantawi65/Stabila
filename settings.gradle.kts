@@ -26,4 +26,4 @@ include(":feature:camera")
 
 include(":feature:dailytest")
 include(":feature:history")
- 
+include(":feature:keyboard")

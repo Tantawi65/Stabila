@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import com.stabila.feature.camera.ui.CameraScreen
 import com.stabila.feature.dailytest.ui.DailyTestScreen
 import com.stabila.feature.history.ui.HistoryScreen
+import com.stabila.feature.keyboard.ui.KeyboardSetupScreen
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -71,6 +72,13 @@ fun StabilaNavHost(
                             launchSingleTop = true
                             restoreState = true
                         }
+                    },
+                    onNavigateToKeyboardSetup = {
+                        navController.navigate(Screen.KeyboardSetup.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 )
             }
@@ -85,6 +93,9 @@ fun StabilaNavHost(
             }
             composable(Screen.Settings.route) {
                 com.stabila.app.ui.SettingsScreen()
+            }
+            composable(Screen.KeyboardSetup.route) {
+                KeyboardSetupScreen(onNavigateBack = { navController.popBackStack() })
             }
         }
     }
