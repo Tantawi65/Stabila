@@ -312,21 +312,21 @@ fun HomeScreen(
                 )
                 ActionCard(
                     modifier = Modifier.fillMaxWidth(),
-                    title = "Settings",
-                    subtitle = "App preferences",
-                    icon = Icons.Default.Settings,
-                    accentColor = Amber500,
-                    adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                    onClick = onNavigateToSettings
-                )
-                ActionCard(
-                    modifier = Modifier.fillMaxWidth(),
                     title = "Adaptive Keyboard",
                     subtitle = "Setup & enable",
                     icon = Icons.Default.Keyboard,
                     accentColor = MaterialTheme.colorScheme.primary,
                     adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
                     onClick = onNavigateToKeyboardSetup
+                )
+                ActionCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    title = "Settings",
+                    subtitle = "App preferences",
+                    icon = Icons.Default.Settings,
+                    accentColor = Amber500,
+                    adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
+                    onClick = onNavigateToSettings
                 )
             }
         } else {
@@ -378,24 +378,29 @@ fun HomeScreen(
                         onClick = onNavigateToSettings
                     )
                 }
-                ActionCard(
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    title = "Settings",
-                    subtitle = "App preferences",
-                    icon = Icons.Default.Settings,
-                    accentColor = Amber500,
-                    adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                    onClick = onNavigateToSettings
-                )
-                ActionCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    title = "Adaptive Keyboard",
-                    subtitle = "Setup & enable",
-                    icon = Icons.Default.Keyboard,
-                    accentColor = MaterialTheme.colorScheme.primary,
-                    adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                    onClick = onNavigateToKeyboardSetup
-                )
+                    horizontalArrangement = Arrangement.spacedBy(adaptive.spacingUnit / 2)
+                ) {
+                    ActionCard(
+                        modifier = Modifier.weight(1f),
+                        title = "Adaptive Keyboard",
+                        subtitle = "Setup & enable",
+                        icon = Icons.Default.Keyboard,
+                        accentColor = MaterialTheme.colorScheme.primary,
+                        adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
+                        onClick = onNavigateToKeyboardSetup
+                    )
+                    ActionCard(
+                        modifier = Modifier.weight(1f),
+                        title = "Settings",
+                        subtitle = "App preferences",
+                        icon = Icons.Default.Settings,
+                        accentColor = Amber500,
+                        adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
+                        onClick = onNavigateToSettings
+                    )
+                }
             }
         }
 
