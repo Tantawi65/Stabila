@@ -118,7 +118,7 @@ private fun NormalKeyboard(
     val letterRowsAR = listOf(
         "ضصثقفغعهخحجد".toList(),
         "شسيبلاتنمكط".toList(),
-        "ئءؤرىةوزظ".toList()
+        "ذئءؤرىةوزظ".toList()
     )
     val symbolRows1 = listOf(
         "1234567890".toList(),
@@ -424,7 +424,7 @@ private fun getNeighbors(center: Char, symbolState: Int, isArabic: Boolean): Lis
         ",        .",
         "ضصثقفغعهخحجد",
         "شسيبلاتنمكط",
-        "ئءؤرىةوزظ",
+        "ذئءؤرىةوزظ",
         ",        ."
     )
     

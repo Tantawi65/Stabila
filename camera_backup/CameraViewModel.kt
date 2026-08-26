@@ -27,14 +27,6 @@ class CameraViewModel @Inject constructor(
     private val imageProcessor: ImageProcessor
 ) : AndroidViewModel(application) {
 
-    init {
-        if (!org.opencv.android.OpenCVLoader.initDebug()) {
-            android.util.Log.e("OpenCV", "Unable to load OpenCV!")
-        } else {
-            android.util.Log.d("OpenCV", "OpenCV loaded successfully!")
-        }       
-    }
-
     enum class CameraState {
         IDLE,           // Ready to take a picture
         STABILIZING,    // Waiting for tremor trough
@@ -73,7 +65,7 @@ class CameraViewModel @Inject constructor(
     /**
      * Process the dynamically captured Pro frames along with the Normal "Before" frame.
      */
-    fun onBurstCaptured(bestProBitmap: Bitmap?, normalBitmap: Bitmap?, isSmoothMode: Boolean = true) {
+    fun onBurstCaptured(bestProBitmap: Bitmap?, normalBitmap: Bitmap?) {
         if (bestProBitmap == null) {
             reset()
             return
@@ -85,15 +77,13 @@ class CameraViewModel @Inject constructor(
             // User requested the 'Before' image to be the normal (light mode) photo again
             val original = if (_uiState.value.isCompareMode) normalBitmap else null
 
-            // Conditionally apply OpenCV Denoising based on the Smooth Mode toggle
-            val processedImage = if (isSmoothMode) {
-                imageProcessor.applyOpenCVDenoising(bestProBitmap)
-            } else {
-                bestProBitmap // Bypass denoising entirely for Texture Mode
-            }
+            //  STEP 2 & 3: TFLite Zero-DCE Low-Light Enhancement 
+            // This replaces both the manual brightness boost and the old super-resolution model,
+            // providing natural lighting curves while preserving 100% of original detail!
+            val zeroDceEnhanced = imageProcessor.applyZeroDCEEnhancement(bestProBitmap)
 
-            // Final: mild sharpening pass then save 
-            val processed = imageProcessor.applyDeblurFilter(processedImage)
+            //  Final: mild sharpening pass then save 
+            val processed = imageProcessor.applyDeblurFilter(zeroDceEnhanced)
             val saved = saveToGallery(processed)
 
             _uiState.value = _uiState.value.copy(
@@ -105,7 +95,7 @@ class CameraViewModel @Inject constructor(
 
             // Clean up raw frames and intermediates
             if (normalBitmap != null && normalBitmap != original) normalBitmap.recycle()
-            if (processedImage !== processed && processedImage !== original && processedImage !== bestProBitmap) processedImage.recycle()
+            if (zeroDceEnhanced !== processed && zeroDceEnhanced !== original && zeroDceEnhanced !== bestProBitmap) zeroDceEnhanced.recycle()
             if (bestProBitmap !== processed && bestProBitmap !== original) bestProBitmap.recycle()
 
         }

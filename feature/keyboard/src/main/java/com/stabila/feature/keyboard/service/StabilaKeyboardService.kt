@@ -40,11 +40,22 @@ class StabilaKeyboardService : InputMethodService(), LifecycleOwner, ViewModelSt
     override val viewModelStore: ViewModelStore get() = store
     override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
 
+    private val tremorScoreState = androidx.compose.runtime.mutableFloatStateOf(-1f)
+    private lateinit var prefs: android.content.SharedPreferences
+
     override fun onCreate() {
         super.onCreate()
+        prefs = getSharedPreferences("stabila_ati", android.content.Context.MODE_PRIVATE)
         savedStateRegistryController.performRestore(null)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
     }
+
+    override fun onStartInputView(info: android.view.inputmethod.EditorInfo?, restarting: Boolean) {
+        super.onStartInputView(info, restarting)
+        tremorScoreState.floatValue = prefs.getFloat("last_tremor_score", -1f)
+    }
+
+
 
     override fun onCreateInputView(): View {
         val container = object : FrameLayout(this) {
@@ -56,18 +67,14 @@ class StabilaKeyboardService : InputMethodService(), LifecycleOwner, ViewModelSt
                 root.setViewTreeSavedStateRegistryOwner(this@StabilaKeyboardService)
             }
         }
-
-        val prefs = getSharedPreferences("stabila_ati", android.content.Context.MODE_PRIVATE)
         
         val composeView = ComposeView(this).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             
             setContent {
-                val tremorScore = prefs.getFloat("last_tremor_score", -1f)
-                
                 StabilaTheme {
                     com.stabila.feature.keyboard.ui.StabilaKeyboardLayout(
-                        tremorScore = tremorScore,
+                        tremorScore = tremorScoreState.floatValue,
                         onKeyPress = { char ->
                             currentInputConnection?.commitText(char, 1)
                         },
@@ -95,6 +102,7 @@ class StabilaKeyboardService : InputMethodService(), LifecycleOwner, ViewModelSt
 
     override fun onWindowShown() {
         super.onWindowShown()
+        tremorScoreState.floatValue = prefs.getFloat("last_tremor_score", -1f)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
     }
