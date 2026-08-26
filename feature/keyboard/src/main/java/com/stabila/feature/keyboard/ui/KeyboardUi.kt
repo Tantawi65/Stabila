@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.SpaceBar
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.KeyboardReturn
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -43,6 +44,7 @@ fun StabilaKeyboardLayout(
     // Hoist state so it's not lost when NormalKeyboard is removed from composition during magnification
     var isShift by remember { mutableStateOf(false) }
     var symbolState by remember { mutableIntStateOf(0) } // 0=letters, 1=symbols1, 2=symbols2
+    var isArabic by remember { mutableStateOf(false) } // true=AR, false=EN
 
     val targetHeight = if (currentState == KeyboardState.MAGNIFIED) 450.dp else 300.dp
     val animatedHeight by animateDpAsState(targetValue = targetHeight, label = "KeyboardHeight")
@@ -59,8 +61,10 @@ fun StabilaKeyboardLayout(
                     NormalKeyboard(
                         isShift = isShift,
                         symbolState = symbolState,
+                        isArabic = isArabic,
                         onShiftChange = { isShift = it },
                         onSymbolStateChange = { symbolState = it },
+                        onLanguageToggle = { isArabic = !isArabic; symbolState = 0 },
                         onCharPress = { char ->
                             if (useMagnifier) {
                                 magnifiedCenterKey = char
@@ -78,6 +82,7 @@ fun StabilaKeyboardLayout(
                     MagnifiedKeyboard(
                         centerChar = magnifiedCenterKey,
                         symbolState = symbolState,
+                        isArabic = isArabic,
                         onCharSelected = { char ->
                             onKeyPress(char.toString())
                             currentState = KeyboardState.NORMAL
@@ -96,17 +101,24 @@ fun StabilaKeyboardLayout(
 private fun NormalKeyboard(
     isShift: Boolean,
     symbolState: Int,
+    isArabic: Boolean,
     onShiftChange: (Boolean) -> Unit,
     onSymbolStateChange: (Int) -> Unit,
+    onLanguageToggle: () -> Unit,
     onCharPress: (Char) -> Unit,
     onDelete: () -> Unit,
     onSpace: () -> Unit,
     onEnter: () -> Unit
 ) {
-    val letterRows = listOf(
+    val letterRowsEN = listOf(
         "qwertyuiop".toList(),
         "asdfghjkl".toList(),
         "zxcvbnm".toList()
+    )
+    val letterRowsAR = listOf(
+        "ضصثقفغعهخحجد".toList(),
+        "شسيبلاتنمكط".toList(),
+        "ئءؤرﻻىةوزظ".toList()
     )
     val symbolRows1 = listOf(
         "1234567890".toList(),
@@ -119,17 +131,18 @@ private fun NormalKeyboard(
         "%©®™✓[]<> ".toList() // Add space at the end to make it 10 chars
     )
 
-    val currentRows = when (symbolState) {
-        1 -> symbolRows1
-        2 -> symbolRows2
-        else -> letterRows
+    val currentRows = when {
+        symbolState == 1 -> symbolRows1
+        symbolState == 2 -> symbolRows2
+        isArabic -> letterRowsAR
+        else -> letterRowsEN
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(vertical = 8.dp, horizontal = 4.dp),
-        verticalArrangement = Arrangement.SpaceEvenly
+            .padding(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         // Row 1
         KeyboardRow(currentRows[0], isShift, onCharPress)
@@ -201,7 +214,14 @@ private fun NormalKeyboard(
                     if (symbolState == 0) onSymbolStateChange(1) else onSymbolStateChange(0) 
                 }
             ) {
-                Text(if (symbolState != 0) "ABC" else "?123", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                Text(if (symbolState != 0) (if (isArabic) "أ ب ت" else "ABC") else "?123", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+            }
+            
+            ActionKey(
+                modifier = Modifier.weight(1f).padding(horizontal = 2.dp),
+                onClick = onLanguageToggle
+            ) {
+                Icon(Icons.Default.Language, contentDescription = "Language")
             }
             
             KeyButton(
@@ -211,7 +231,7 @@ private fun NormalKeyboard(
             )
             
             ActionKey(
-                modifier = Modifier.weight(4f).padding(horizontal = 2.dp),
+                modifier = Modifier.weight(3f).padding(horizontal = 2.dp),
                 onClick = onSpace
             ) {
                 Icon(Icons.Default.SpaceBar, contentDescription = "Space")
@@ -265,10 +285,11 @@ private fun ColumnScope.KeyboardRow(
 private fun MagnifiedKeyboard(
     centerChar: Char,
     symbolState: Int,
+    isArabic: Boolean,
     onCharSelected: (Char) -> Unit,
     onCancel: () -> Unit
 ) {
-    val neighbors = getNeighbors(centerChar, symbolState)
+    val neighbors = getNeighbors(centerChar, symbolState, isArabic)
     val chars = neighbors.flatten().filterNotNull().filter { it != ' ' }
     
     val numRows = when (chars.size) {
@@ -385,7 +406,7 @@ private fun KeyButton(
     }
 }
 
-private fun getNeighbors(center: Char, symbolState: Int): List<List<Char?>> {
+private fun getNeighbors(center: Char, symbolState: Int, isArabic: Boolean): List<List<Char?>> {
     val layout = listOf(
         "qwertyuiop",
         "asdfghjkl",
@@ -394,20 +415,25 @@ private fun getNeighbors(center: Char, symbolState: Int): List<List<Char?>> {
         "1234567890",
         "@#£_&-+()\"",
         "*\"':;!?~`|",
-        ",     .",
+        ",        .",
         "~`|•√π÷×¶∆",
         "£¢€¥^°={}\\",
         "%©®™✓[]<> ",
-        ",     ."
+        ",        .",
+        "ضصثقفغعهخحجد",
+        "شسيبلاتنمكط",
+        "ئءؤرﻻىةوزظ",
+        ",        ."
     )
     
     val lowerCenter = center.lowercaseChar()
     val isUpper = center.isUpperCase()
     
     // Restrict search to the active symbol group
-    val startRow = when (symbolState) {
-        1 -> 4
-        2 -> 8
+    val startRow = when {
+        symbolState == 1 -> 4
+        symbolState == 2 -> 8
+        isArabic -> 12
         else -> 0
     }
     val endRow = startRow + 3
