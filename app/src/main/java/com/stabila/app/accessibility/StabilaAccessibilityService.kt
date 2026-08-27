@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import com.stabila.core.data.UserPreferencesDataStore
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -15,6 +16,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 import kotlin.math.max
 
@@ -64,6 +66,14 @@ class StabilaAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
 
+        if (event.eventType == AccessibilityEvent.TYPE_TOUCH_INTERACTION_START) {
+            // Physical human touch detected on screen -> Emergency Brake!
+            if (isScrolling) {
+                enterStateB()
+            }
+            return
+        }
+
         if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             val packageName = event.packageName?.toString() ?: return
             
@@ -91,8 +101,11 @@ class StabilaAccessibilityService : AccessibilityService() {
             val isAppEnabled = enabledApps.contains(packageName) || enabledApps.contains("all")
 
             if (isAppEnabled) {
-                // Feature automatically disabled (State B) when entering any app for the first time
-                enterStateB()
+                // If auto-scroll is already running, keep scrolling!
+                // Only enter paused state (State B) if auto-scroll was NOT actively running.
+                if (!isScrolling) {
+                    enterStateB()
+                }
             } else {
                 stopScrollingAndHideUI()
             }
@@ -105,26 +118,63 @@ class StabilaAccessibilityService : AccessibilityService() {
         
         overlayManager.hideInvisibleShield()
         
-        // Get real tremor score fetched from database
-        val tremorScore = latestTremorScore 
-        
-        overlayManager.showResumePill(tremorScore) {
-            // On pill clicked, enter State A
-            enterStateA()
+        scope.launch {
+            val savedX = userPreferences.autoScrollButtonX.first()
+            val savedY = userPreferences.autoScrollButtonY.first()
+            val tremorScore = latestTremorScore
+
+            overlayManager.showFloatingButton(
+                tremorScore = tremorScore,
+                savedX = savedX,
+                savedY = savedY,
+                isScrolling = false,
+                onToggleScroll = { toggleScrollingState() },
+                onPositionSaved = { x, y ->
+                    scope.launch {
+                        userPreferences.setAutoScrollButtonPosition(x, y)
+                    }
+                }
+            )
         }
     }
 
     private fun enterStateA() {
         isScrolling = true
-        overlayManager.hideResumePill()
         
-        // Show the invisible shield that acts as the emergency brake
-        overlayManager.showInvisibleShield {
-            // If the user taps anywhere, stop scrolling and return to State B
-            enterStateB()
-        }
+        scope.launch {
+            val savedX = userPreferences.autoScrollButtonX.first()
+            val savedY = userPreferences.autoScrollButtonY.first()
+            val tremorScore = latestTremorScore
 
-        startScrollingLoop()
+            overlayManager.showFloatingButton(
+                tremorScore = tremorScore,
+                savedX = savedX,
+                savedY = savedY,
+                isScrolling = true,
+                onToggleScroll = { toggleScrollingState() },
+                onPositionSaved = { x, y ->
+                    scope.launch {
+                        userPreferences.setAutoScrollButtonPosition(x, y)
+                    }
+                }
+            )
+
+            // Show the invisible shield that acts as the emergency brake
+            overlayManager.showInvisibleShield {
+                // If the user taps anywhere on screen, stop scrolling and return to State B
+                enterStateB()
+            }
+
+            startScrollingLoop()
+        }
+    }
+
+    private fun toggleScrollingState() {
+        if (isScrolling) {
+            enterStateB()
+        } else {
+            enterStateA()
+        }
     }
 
     private fun stopScrollingAndHideUI() {
@@ -139,37 +189,75 @@ class StabilaAccessibilityService : AccessibilityService() {
             while (isScrolling) {
                 dispatchScrollGesture()
                 
-                // Delay based on speed. 
-                // Speed 1 (slow) -> 3000ms delay
-                // Speed 5 (fast) -> 600ms delay
-                val baseDelay = 3600L
-                val delayMs = max(200L, baseDelay - (currentScrollSpeed * 600L).toLong())
-                delay(delayMs)
+                // Fixed minimal delay to allow system to process gesture callbacks cleanly
+                delay(10L)
             }
         }
     }
 
-    private fun dispatchScrollGesture() {
+    private suspend fun dispatchScrollGesture() {
+        if (!isScrolling) return
+
         val displayMetrics = resources.displayMetrics
         val middleX = displayMetrics.widthPixels / 2f
-        val startY = displayMetrics.heightPixels * 0.7f
-        val endY = displayMetrics.heightPixels * 0.3f // Scroll up by swiping up
+        val centerY = displayMetrics.heightPixels / 2f
+
+        // Map current setting level to the exact px/s requested by the user
+        val targetSpeedPxPerSec = when (currentScrollSpeed.toInt()) {
+            1 -> 150f
+            2 -> 300f
+            3 -> 450f
+            4 -> 750f
+            5 -> 1000f
+            else -> 85f
+        }
+
+        // We use a fixed duration for each stroke to ensure smooth continuous increments.
+        // A duration of 250ms creates a much smoother glide than very short strokes.
+        val durationMs = 200L
+        val interStepDelayMs = 10L // Matching the delay(10L) in startScrollingLoop
+        val cycleMs = durationMs + interStepDelayMs
+
+        // Math for target speed (px/s)
+        // Effective Speed (px/s) = (strokeDistance / cycleMs) * 1000
+        // strokeDistance = Speed * cycleMs / 1000
+        val strokeDistance = (targetSpeedPxPerSec * cycleMs) / 1000f
+
+        val startY = centerY + (strokeDistance / 2f)
+        val endY = centerY - (strokeDistance / 2f)
 
         val path = Path().apply {
             moveTo(middleX, startY)
             lineTo(middleX, endY)
         }
 
-        // Duration of swipe is also tied to speed for smoothness
-        // Speed 1 -> 2000ms duration (very slow)
-        // Speed 5 -> 400ms duration (fast)
-        val durationMs = max(200L, 2400L - (currentScrollSpeed * 400L).toLong())
-
         val gesture = GestureDescription.Builder()
             .addStroke(GestureDescription.StrokeDescription(path, 0, durationMs))
             .build()
 
-        dispatchGesture(gesture, null, null)
+        val stepCompleted = CompletableDeferred<Unit>()
+
+        // Temporarily pass touches through shield so synthetic gesture stroke is delivered to target app
+        overlayManager.setShieldTouchable(false)
+
+        dispatchGesture(gesture, object : AccessibilityService.GestureResultCallback() {
+            override fun onCompleted(gestureDescription: GestureDescription?) {
+                super.onCompleted(gestureDescription)
+                overlayManager.setShieldTouchable(true)
+                stepCompleted.complete(Unit)
+            }
+
+            override fun onCancelled(gestureDescription: GestureDescription?) {
+                super.onCancelled(gestureDescription)
+                overlayManager.setShieldTouchable(true)
+                stepCompleted.complete(Unit)
+            }
+        }, null)
+
+        // Wait for current micro-step stroke to finish executing before initiating next increment
+        withTimeoutOrNull(durationMs + 100L) {
+            stepCompleted.await()
+        }
     }
 
     override fun onInterrupt() {

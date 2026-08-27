@@ -41,6 +41,8 @@ class UserPreferencesDataStore @Inject constructor(
         // Auto-Scroll Settings
         val KEY_AUTO_SCROLL_SPEED = floatPreferencesKey("auto_scroll_speed")
         val KEY_ENABLED_SCROLL_APPS = stringPreferencesKey("enabled_scroll_apps")
+        val KEY_AUTO_SCROLL_BUTTON_X = floatPreferencesKey("auto_scroll_button_x")
+        val KEY_AUTO_SCROLL_BUTTON_Y = floatPreferencesKey("auto_scroll_button_y")
         // Theme Setting
         val KEY_THEME_PREFERENCE = stringPreferencesKey("theme_preference")
 
@@ -110,12 +112,27 @@ class UserPreferencesDataStore @Inject constructor(
         if (csv.isBlank()) emptySet() else csv.split(",").toSet()
     }
 
+    val autoScrollButtonX: Flow<Float> = context.dataStore.data.map { prefs ->
+        prefs[KEY_AUTO_SCROLL_BUTTON_X] ?: -1f
+    }
+
+    val autoScrollButtonY: Flow<Float> = context.dataStore.data.map { prefs ->
+        prefs[KEY_AUTO_SCROLL_BUTTON_Y] ?: -1f
+    }
+
     suspend fun setAutoScrollSpeed(value: Float) {
         context.dataStore.edit { it[KEY_AUTO_SCROLL_SPEED] = value }
     }
 
     suspend fun setEnabledScrollApps(apps: Set<String>) {
         context.dataStore.edit { it[KEY_ENABLED_SCROLL_APPS] = apps.joinToString(",") }
+    }
+
+    suspend fun setAutoScrollButtonPosition(x: Float, y: Float) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_AUTO_SCROLL_BUTTON_X] = x
+            prefs[KEY_AUTO_SCROLL_BUTTON_Y] = y
+        }
     }
 
     val themePreference: Flow<String> = context.dataStore.data.map { prefs ->
