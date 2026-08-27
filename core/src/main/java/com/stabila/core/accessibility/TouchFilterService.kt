@@ -61,6 +61,14 @@ class TouchFilterService : AccessibilityService(), View.OnTouchListener {
                 tremorRadius = max(radius * 1.25f, touchSlop * 1.5f)
             }
         }
+
+        scope.launch {
+            AutoScrollState.isScrollingFlow.collect { isAutoScrolling ->
+                if (isEnabled) {
+                    setOverlayTouchable(!isAutoScrolling)
+                }
+            }
+        }
     }
 
     private fun showOverlay() {
@@ -71,11 +79,17 @@ class TouchFilterService : AccessibilityService(), View.OnTouchListener {
             setOnTouchListener(this@TouchFilterService)
         }
 
+        val initialFlags = if (AutoScrollState.isScrolling) {
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+        } else {
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+        }
+
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            initialFlags,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
@@ -110,7 +124,7 @@ class TouchFilterService : AccessibilityService(), View.OnTouchListener {
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-        if (event == null || !isEnabled || isDispatching) return false
+        if (event == null || !isEnabled || isDispatching || AutoScrollState.isScrolling) return false
 
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {

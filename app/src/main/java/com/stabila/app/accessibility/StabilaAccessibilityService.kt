@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Path
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
+import com.stabila.core.accessibility.AutoScrollState
 import com.stabila.core.data.UserPreferencesDataStore
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CompletableDeferred
@@ -66,14 +67,6 @@ class StabilaAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
 
-        if (event.eventType == AccessibilityEvent.TYPE_TOUCH_INTERACTION_START) {
-            // Physical human touch detected on screen -> Emergency Brake!
-            if (isScrolling) {
-                enterStateB()
-            }
-            return
-        }
-
         if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             val packageName = event.packageName?.toString() ?: return
             
@@ -114,6 +107,7 @@ class StabilaAccessibilityService : AccessibilityService() {
 
     private fun enterStateB() {
         isScrolling = false
+        AutoScrollState.isScrolling = false
         scrollJob?.cancel()
         
         overlayManager.hideInvisibleShield()
@@ -140,6 +134,7 @@ class StabilaAccessibilityService : AccessibilityService() {
 
     private fun enterStateA() {
         isScrolling = true
+        AutoScrollState.isScrolling = true
         
         scope.launch {
             val savedX = userPreferences.autoScrollButtonX.first()
@@ -179,6 +174,7 @@ class StabilaAccessibilityService : AccessibilityService() {
 
     private fun stopScrollingAndHideUI() {
         isScrolling = false
+        AutoScrollState.isScrolling = false
         scrollJob?.cancel()
         overlayManager.hideAll()
     }
@@ -206,22 +202,21 @@ class StabilaAccessibilityService : AccessibilityService() {
         val targetSpeedPxPerSec = when (currentScrollSpeed.toInt()) {
             1 -> 150f
             2 -> 300f
-            3 -> 450f
+            3 -> 400f
             4 -> 750f
             5 -> 1000f
-            else -> 85f
+            else -> 1000f
         }
 
         // We use a fixed duration for each stroke to ensure smooth continuous increments.
-        // A duration of 250ms creates a much smoother glide than very short strokes.
         val durationMs = 200L
         val interStepDelayMs = 10L // Matching the delay(10L) in startScrollingLoop
         val cycleMs = durationMs + interStepDelayMs
 
         // Math for target speed (px/s)
-        // Effective Speed (px/s) = (strokeDistance / cycleMs) * 1000
-        // strokeDistance = Speed * cycleMs / 1000
-        val strokeDistance = (targetSpeedPxPerSec * cycleMs) / 1000f
+        val calculatedDistance = (targetSpeedPxPerSec * cycleMs) / 1000f
+        val minDistancePx = 40f * displayMetrics.density
+        val strokeDistance = max(calculatedDistance, minDistancePx)
 
         val startY = centerY + (strokeDistance / 2f)
         val endY = centerY - (strokeDistance / 2f)
@@ -266,6 +261,7 @@ class StabilaAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        AutoScrollState.isScrolling = false
         job.cancel()
         overlayManager.hideAll()
     }
