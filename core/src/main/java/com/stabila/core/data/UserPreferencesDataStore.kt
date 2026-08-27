@@ -108,8 +108,8 @@ class UserPreferencesDataStore @Inject constructor(
     }
 
     val enabledScrollApps: Flow<Set<String>> = context.dataStore.data.map { prefs ->
-        val csv = prefs[KEY_ENABLED_SCROLL_APPS] ?: ""
-        if (csv.isBlank()) emptySet() else csv.split(",").toSet()
+        val csv = prefs[KEY_ENABLED_SCROLL_APPS] ?: "all"
+        if (csv.isBlank()) setOf("all") else csv.split(",").toSet()
     }
 
     val autoScrollButtonX: Flow<Float> = context.dataStore.data.map { prefs ->
