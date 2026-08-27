@@ -64,7 +64,8 @@ fun HomeScreen(
     onNavigateToHistory: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToKeyboardSetup: () -> Unit,
-    onNavigateToTouchStabilizer: () -> Unit
+    onNavigateToTouchStabilizer: () -> Unit,
+    onNavigateToAutoScroll: () -> Unit
 ) {
     val latestScore by viewModel.latestScore.collectAsState()
     val adaptive = LocalAdaptiveParams.current
@@ -311,7 +312,7 @@ fun HomeScreen(
                     icon = Icons.Default.Keyboard,
                     accentColor = MaterialTheme.colorScheme.primary,
                     adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                    onClick = onNavigateToSettings
+                    onClick = onNavigateToAutoScroll
                 )
                 ActionCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -387,7 +388,7 @@ fun HomeScreen(
                         icon = Icons.Default.Keyboard,
                         accentColor = MaterialTheme.colorScheme.primary,
                         adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                        onClick = onNavigateToSettings
+                        onClick = onNavigateToAutoScroll
                     )
                 }
                 Row(

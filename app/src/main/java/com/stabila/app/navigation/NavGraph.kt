@@ -86,6 +86,13 @@ fun StabilaNavHost(
                             launchSingleTop = true
                             restoreState = true
                         }
+                    },
+                    onNavigateToAutoScroll = {
+                        navController.navigate(Screen.AutoScrollSetup.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 )
             }
@@ -106,6 +113,9 @@ fun StabilaNavHost(
             }
             composable(Screen.TouchStabilizerSetup.route) {
                 com.stabila.app.ui.TouchStabilizerScreen(onNavigateBack = { navController.popBackStack() })
+            }
+            composable(Screen.AutoScrollSetup.route) {
+                com.stabila.app.ui.AutoScrollScreen(onNavigateBack = { navController.popBackStack() })
             }
         }
     }

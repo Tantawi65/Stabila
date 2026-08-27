@@ -14,4 +14,5 @@ sealed class Screen(val route: String) {
     object Settings   : Screen("settings")
     object KeyboardSetup : Screen("keyboard_setup")
     object TouchStabilizerSetup : Screen("touch_stabilizer_setup")
+    object AutoScrollSetup : Screen("autoscroll_setup")
 }
