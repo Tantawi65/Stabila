@@ -125,4 +125,21 @@ class UserPreferencesDataStore @Inject constructor(
     suspend fun setThemePreference(theme: String) {
         context.dataStore.edit { it[KEY_THEME_PREFERENCE] = theme }
     }
+
+    // Touch Stabilizer Settings
+    val touchStabilizerEnabled: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[androidx.datastore.preferences.core.booleanPreferencesKey("touch_stabilizer_enabled")] ?: false
+    }
+
+    suspend fun setTouchStabilizerEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[androidx.datastore.preferences.core.booleanPreferencesKey("touch_stabilizer_enabled")] = enabled }
+    }
+    
+    val touchTremorRadius: Flow<Float> = context.dataStore.data.map { prefs ->
+        prefs[androidx.datastore.preferences.core.floatPreferencesKey("touch_tremor_radius")] ?: 50f
+    }
+
+    suspend fun setTouchTremorRadius(radius: Float) {
+        context.dataStore.edit { it[androidx.datastore.preferences.core.floatPreferencesKey("touch_tremor_radius")] = radius }
+    }
 }

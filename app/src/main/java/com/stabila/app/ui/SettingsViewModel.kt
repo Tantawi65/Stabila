@@ -81,4 +81,20 @@ class SettingsViewModel @Inject constructor(
             userPrefs.setThemePreference(theme)
         }
     }
+
+    val touchStabilizerEnabled = userPrefs.touchStabilizerEnabled
+
+    fun setTouchStabilizerEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            userPrefs.setTouchStabilizerEnabled(enabled)
+        }
+    }
+    
+    val touchTremorRadius = userPrefs.touchTremorRadius
+
+    fun setTouchTremorRadius(radius: Float) {
+        viewModelScope.launch {
+            userPrefs.setTouchTremorRadius(radius)
+        }
+    }
 }

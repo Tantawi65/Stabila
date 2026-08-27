@@ -29,6 +29,8 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Keyboard
+import androidx.compose.material.icons.filled.TouchApp
+import com.stabila.core.ui.stabilizedClick
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -61,7 +63,8 @@ fun HomeScreen(
     onNavigateToCamera: () -> Unit,
     onNavigateToHistory: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToKeyboardSetup: () -> Unit
+    onNavigateToKeyboardSetup: () -> Unit,
+    onNavigateToTouchStabilizer: () -> Unit
 ) {
     val latestScore by viewModel.latestScore.collectAsState()
     val adaptive = LocalAdaptiveParams.current
@@ -321,6 +324,15 @@ fun HomeScreen(
                 )
                 ActionCard(
                     modifier = Modifier.fillMaxWidth(),
+                    title = "Touch Stabilizer",
+                    subtitle = "Smart touch filter",
+                    icon = Icons.Default.TouchApp,
+                    accentColor = MaterialTheme.colorScheme.tertiary,
+                    adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
+                    onClick = onNavigateToTouchStabilizer
+                )
+                ActionCard(
+                    modifier = Modifier.fillMaxWidth(),
                     title = "Settings",
                     subtitle = "App preferences",
                     icon = Icons.Default.Settings,
@@ -393,14 +405,24 @@ fun HomeScreen(
                     )
                     ActionCard(
                         modifier = Modifier.weight(1f),
-                        title = "Settings",
-                        subtitle = "App preferences",
-                        icon = Icons.Default.Settings,
-                        accentColor = Amber500,
+                        title = "Touch Stabilizer",
+                        subtitle = "Smart touch filter",
+                        icon = Icons.Default.TouchApp,
+                        accentColor = MaterialTheme.colorScheme.tertiary,
                         adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                        onClick = onNavigateToSettings
+                        onClick = onNavigateToTouchStabilizer
                     )
                 }
+                
+                ActionCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    title = "Settings",
+                    subtitle = "App preferences",
+                    icon = Icons.Default.Settings,
+                    accentColor = Amber500,
+                    adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
+                    onClick = onNavigateToSettings
+                )
             }
         }
 
@@ -419,7 +441,9 @@ private fun ActionCard(
     onClick: () -> Unit
 ) {
     val adaptive = LocalAdaptiveParams.current
-
+    val viewModel: HomeViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+    val touchStabilizerEnabled by viewModel.touchStabilizerEnabled.collectAsState(initial = false)
+    
     Box(
         modifier = modifier
             .height(adaptiveHeight)
@@ -429,7 +453,7 @@ private fun ActionCard(
                     colors = listOf(accentColor.copy(alpha = 0.18f), MaterialTheme.colorScheme.surface)
                 )
             )
-            .clickable(onClick = onClick)
+            .stabilizedClick(enabled = touchStabilizerEnabled, onClick = onClick)
             .padding(16.dp),
         contentAlignment = Alignment.BottomStart
     ) {

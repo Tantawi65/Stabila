@@ -72,6 +72,7 @@
 
     <!-- Accessibility Service -->
     <string name="accessibility_service_description">Stabila uses the Accessibility Service to provide a State-Based Auto-Scroll feature. This helps users with tremors navigate apps without needing to continuously drag the screen, and prevents accidental taps while scrolling.</string>
+    <string name="touch_stabilizer_desc">Stabila uses the Accessibility Service to filter out involuntary tremors across the entire operating system, enabling precise taps.</string>
 
     <!-- Errors / Generic -->
     <string name="error_generic">Something went wrong. Please try again.</string>

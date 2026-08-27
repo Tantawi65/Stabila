@@ -59,6 +59,9 @@ fun SettingsScreen(
 ) {
     val notifications by viewModel.notifications.collectAsState()
     val reminderTime by viewModel.reminderTime.collectAsState()
+    val autoScrollSpeed by viewModel.autoScrollSpeed.collectAsState(initial = 3f)
+    val enabledScrollApps by viewModel.enabledScrollApps.collectAsState(initial = emptySet())
+    val isGlobalEnabled = enabledScrollApps.contains("all")
     val themePreference by viewModel.themePreference.collectAsState(initial = "SYSTEM")
     val context = LocalContext.current
     val adaptive = LocalAdaptiveParams.current

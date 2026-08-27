@@ -18,8 +18,15 @@ private const val KEY_LAST_SCORE = "last_tremor_score"
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val dao: TremorReadingDao
+    private val dao: TremorReadingDao,
+    private val userPrefs: com.stabila.core.data.UserPreferencesDataStore
 ) : ViewModel() {
+
+    val touchStabilizerEnabled = userPrefs.touchStabilizerEnabled.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false
+    )
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
