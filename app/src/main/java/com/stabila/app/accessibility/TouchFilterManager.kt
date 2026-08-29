@@ -130,6 +130,7 @@ class TouchFilterManager(
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
+                // If it's a multi-touch, we might want to just record the primary pointer
                 currentPoints.add(event.rawX to event.rawY)
                 swipePath?.lineTo(event.rawX, event.rawY)
                 
@@ -146,7 +147,7 @@ class TouchFilterManager(
             }
             MotionEvent.ACTION_UP -> {
                 if (isCurrentlySwiping) {
-                    dispatchRecordedSwipe(event.rawX, event.rawY)
+                    dispatchRecordedSwipe()
                 } else {
                     val avgX = currentPoints.map { it.first }.average().toFloat()
                     val avgY = currentPoints.map { it.second }.average().toFloat()
@@ -167,9 +168,13 @@ class TouchFilterManager(
     }
 
     private fun dispatchStabilizedTap(x: Float, y: Float) {
-        val path = Path().apply { moveTo(x, y) }
+        val path = Path().apply { 
+            moveTo(x, y) 
+            // Add a tiny lineTo to prevent 0-length path crashes on some Android versions
+            lineTo(x + 0.1f, y)
+        }
         val gesture = GestureDescription.Builder()
-            .addStroke(GestureDescription.StrokeDescription(path, 0, 80))
+            .addStroke(GestureDescription.StrokeDescription(path, 0, 50))
             .build()
 
         isDispatching = true
@@ -186,23 +191,18 @@ class TouchFilterManager(
                     isDispatching = false
                 }
             }, null)
-        }, 50L)
+        }, 30L)
     }
 
-    private fun dispatchRecordedSwipe(endX: Float, endY: Float) {
-        val startX = currentPoints.first().first
-        val startY = currentPoints.first().second
-        
-        val path = Path().apply {
-            moveTo(startX, startY)
-            lineTo(endX, endY)
-        }
+    private fun dispatchRecordedSwipe() {
+        if (swipePath == null) return
         
         val elapsedMs = System.currentTimeMillis() - swipeStartTime
-        val duration = elapsedMs.coerceIn(80L, 400L)
+        // Preserve actual duration up to 2 seconds so slow scrolls don't become violent flings
+        val duration = elapsedMs.coerceIn(50L, 2000L)
         
         val gesture = GestureDescription.Builder()
-            .addStroke(GestureDescription.StrokeDescription(path, 0, duration))
+            .addStroke(GestureDescription.StrokeDescription(swipePath!!, 0, duration))
             .build()
 
         isDispatching = true
@@ -219,7 +219,7 @@ class TouchFilterManager(
                     isDispatching = false
                 }
             }, null)
-        }, 50L)
+        }, 30L)
     }
 
     fun onDestroy() {
