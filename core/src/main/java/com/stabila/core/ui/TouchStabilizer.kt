@@ -63,9 +63,9 @@ fun Modifier.stabilizedClick(
                 try {
                     withTimeout(350) {
                         while (true) {
-                            val event = awaitPointerEvent()
+                            val event = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Final)
                             
-                            // If a parent (like a ScrollView) consumed the event, it means the user is scrolling.
+                            // If a parent (like a ScrollView) consumed the event in the Main pass, it means the user is scrolling.
                             if (event.changes.any { it.isConsumed }) {
                                 isCanceled = true
                                 break
@@ -93,7 +93,7 @@ fun Modifier.stabilizedClick(
                 // Wait for the user to lift their finger if they haven't yet
                 if (!isReleased) {
                     while (true) {
-                        val event = awaitPointerEvent()
+                        val event = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Final)
                         if (event.changes.any { it.isConsumed }) {
                             isCanceled = true
                             break
