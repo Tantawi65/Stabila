@@ -29,8 +29,9 @@ class OverlayManager(private val service: AccessibilityService) {
 
     private val windowManager = service.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
-    // Invisible Emergency Brake Shield Overlay
-    private var shieldView: FrameLayout? = null
+    // Invisible Emergency Brake Split-Shield Overlay
+    private var shieldLeftView: FrameLayout? = null
+    private var shieldRightView: FrameLayout? = null
     private var isShieldVisible = false
 
     // Floating Draggable Auto-Scroll Control Button
@@ -45,41 +46,59 @@ class OverlayManager(private val service: AccessibilityService) {
     private var onPositionSavedListener: ((Float, Float) -> Unit)? = null
 
     /**
-     * Shows the full-screen transparent shield overlay.
-     * Any tap on this shield will trigger [onTouchIntercepted], consuming the touch event
-     * to immediately stop auto-scroll without triggering underlying app UI controls.
+     * Shows the split transparent shield overlay.
+     * We use two shields (Left and Right) with a 20px gap in the middle.
+     * The synthetic swipe happens in this gap, so it never hits our shields!
+     * Any tap outside the gap will trigger [onTouchIntercepted], consuming the touch event
+     * to immediately stop auto-scroll. This completely eliminates WindowManager stuttering!
      */
     @SuppressLint("ClickableViewAccessibility")
     fun showInvisibleShield(onTouchIntercepted: () -> Unit) {
-        if (isShieldVisible && shieldView != null) return
+        if (isShieldVisible) return
 
-        val createShield = FrameLayout(service).apply {
-            setBackgroundColor(Color.TRANSPARENT)
-            setOnTouchListener { _, event ->
-                if (event.action == MotionEvent.ACTION_DOWN) {
-                    // Emergency Brake: Intercept tap, consume event, trigger stop callback
-                    onTouchIntercepted()
-                    return@setOnTouchListener true
+        val screenWidth = service.resources.displayMetrics.widthPixels
+        val gapWidth = 30
+        val sideWidth = (screenWidth - gapWidth) / 2
+
+        val createShield = { 
+            FrameLayout(service).apply {
+                setBackgroundColor(Color.TRANSPARENT)
+                setOnTouchListener { _, event ->
+                    if (event.action == MotionEvent.ACTION_DOWN) {
+                        onTouchIntercepted()
+                        return@setOnTouchListener true
+                    }
+                    true
                 }
-                true
             }
         }
 
-        shieldView = createShield
+        shieldLeftView = createShield()
+        shieldRightView = createShield()
 
-        val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT,
+        val paramsLeft = WindowManager.LayoutParams(
+            sideWidth,
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
         }
 
+        val paramsRight = WindowManager.LayoutParams(
+            sideWidth,
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.TOP or Gravity.END
+        }
+
         try {
-            windowManager.addView(shieldView, params)
+            windowManager.addView(shieldLeftView, paramsLeft)
+            windowManager.addView(shieldRightView, paramsRight)
             isShieldVisible = true
 
             // Re-add pillView if visible so it stays on top of the shield overlay
@@ -101,35 +120,15 @@ class OverlayManager(private val service: AccessibilityService) {
 
     fun hideInvisibleShield() {
         if (!isShieldVisible) return
-        shieldView?.let {
-            try {
-                windowManager.removeView(it)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+        shieldLeftView?.let {
+            try { windowManager.removeView(it) } catch (e: Exception) { e.printStackTrace() }
         }
-        shieldView = null
+        shieldRightView?.let {
+            try { windowManager.removeView(it) } catch (e: Exception) { e.printStackTrace() }
+        }
+        shieldLeftView = null
+        shieldRightView = null
         isShieldVisible = false
-    }
-
-    /**
-     * Temporarily enables or disables touch interception on the shield.
-     * Used during AccessibilityService gesture dispatches so synthetic swipe strokes pass through.
-     */
-    fun setShieldTouchable(touchable: Boolean) {
-        val shield = shieldView ?: return
-        val params = shield.layoutParams as? WindowManager.LayoutParams ?: return
-        val baseFlags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-        val targetFlags = if (touchable) baseFlags else (baseFlags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
-
-        if (params.flags != targetFlags) {
-            params.flags = targetFlags
-            try {
-                windowManager.updateViewLayout(shield, params)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
     }
 
     /**

@@ -3,6 +3,7 @@ package com.stabila.core.data
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -39,6 +40,7 @@ class UserPreferencesDataStore @Inject constructor(
         val KEY_MEDICATION_NAMES = stringPreferencesKey("medication_names")
 
         // Auto-Scroll Settings
+        val KEY_AUTO_SCROLL_MASTER_ENABLED = booleanPreferencesKey("auto_scroll_master_enabled")
         val KEY_AUTO_SCROLL_SPEED = floatPreferencesKey("auto_scroll_speed")
         val KEY_ENABLED_SCROLL_APPS = stringPreferencesKey("enabled_scroll_apps")
         val KEY_AUTO_SCROLL_BUTTON_X = floatPreferencesKey("auto_scroll_button_x")
@@ -107,9 +109,15 @@ class UserPreferencesDataStore @Inject constructor(
         prefs[KEY_AUTO_SCROLL_SPEED] ?: DEFAULT_AUTO_SCROLL_SPEED
     }
 
+    val isAutoScrollMasterEnabled: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[KEY_AUTO_SCROLL_MASTER_ENABLED] ?: true // Default to true so it works out of the box
+    }
+
     val enabledScrollApps: Flow<Set<String>> = context.dataStore.data.map { prefs ->
-        val csv = prefs[KEY_ENABLED_SCROLL_APPS] ?: "all"
-        if (csv.isBlank()) setOf("all") else csv.split(",").toSet()
+        val csv = prefs[KEY_ENABLED_SCROLL_APPS]
+        if (csv == null) setOf("all")
+        else if (csv.isBlank()) emptySet()
+        else csv.split(",").toSet()
     }
 
     val autoScrollButtonX: Flow<Float> = context.dataStore.data.map { prefs ->
@@ -122,6 +130,10 @@ class UserPreferencesDataStore @Inject constructor(
 
     suspend fun setAutoScrollSpeed(value: Float) {
         context.dataStore.edit { it[KEY_AUTO_SCROLL_SPEED] = value }
+    }
+
+    suspend fun setAutoScrollMasterEnabled(value: Boolean) {
+        context.dataStore.edit { it[KEY_AUTO_SCROLL_MASTER_ENABLED] = value }
     }
 
     suspend fun setEnabledScrollApps(apps: Set<String>) {

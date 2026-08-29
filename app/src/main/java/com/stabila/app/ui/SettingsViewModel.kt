@@ -61,6 +61,13 @@ class SettingsViewModel @Inject constructor(
     // Auto-Scroll Integration
     val autoScrollSpeed = userPrefs.autoScrollSpeed
     val enabledScrollApps = userPrefs.enabledScrollApps
+    val isAutoScrollMasterEnabled = userPrefs.isAutoScrollMasterEnabled
+
+    fun setAutoScrollMasterEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            userPrefs.setAutoScrollMasterEnabled(enabled)
+        }
+    }
 
     fun setAutoScrollSpeed(speed: Float) {
         viewModelScope.launch {

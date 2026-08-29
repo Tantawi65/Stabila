@@ -1,4 +1,4 @@
-package com.stabila.core.accessibility
+package com.stabila.app.accessibility
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
@@ -7,42 +7,51 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Path
 import android.graphics.PixelFormat
+import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import android.view.accessibility.AccessibilityEvent
 import com.stabila.core.data.UserPreferencesDataStore
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.sqrt
 
-@AndroidEntryPoint
-class TouchFilterService : AccessibilityService(), View.OnTouchListener {
+class TouchFilterManager(
+    private val accessibilityService: AccessibilityService,
+    private val userPrefs: UserPreferencesDataStore
+) : View.OnTouchListener {
 
-    @Inject
-    lateinit var userPrefs: UserPreferencesDataStore
-
-    private var windowManager: WindowManager? = null
+    private val windowManager = accessibilityService.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private var overlayView: View? = null
-
     private val scope = CoroutineScope(Dispatchers.Main + Job())
+    
     private var isEnabled = false
     private var tremorRadius = 150f
     private var touchSlop = 24f
     private var isDispatching = false
 
-    override fun onServiceConnected() {
-        super.onServiceConnected()
-        windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        touchSlop = android.view.ViewConfiguration.get(this).scaledTouchSlop.toFloat()
+    // We need to know if Auto-Scroll is currently injecting a gesture, to avoid intercepting it.
+    var isAutoScrolling = false
+        set(value) {
+            field = value
+            if (value) {
+                // Auto-scroll started (State A) -> Step aside completely
+                hideOverlay()
+            } else {
+                // Auto-scroll paused (State B) -> Resume stabilizer
+                if (isEnabled) {
+                    showOverlay()
+                }
+            }
+        }
+
+    init {
+        touchSlop = android.view.ViewConfiguration.get(accessibilityService).scaledTouchSlop.toFloat()
         
         scope.launch {
             userPrefs.touchStabilizerEnabled.collect { enabled ->
@@ -57,16 +66,7 @@ class TouchFilterService : AccessibilityService(), View.OnTouchListener {
         
         scope.launch {
             userPrefs.touchTremorRadius.collect { radius ->
-                // Use a tighter bound to allow small scrolls without them registering as taps
                 tremorRadius = max(radius * 1.25f, touchSlop * 1.5f)
-            }
-        }
-
-        scope.launch {
-            AutoScrollState.isScrollingFlow.collect { isAutoScrolling ->
-                if (isEnabled) {
-                    setOverlayTouchable(!isAutoScrolling)
-                }
             }
         }
     }
@@ -74,38 +74,32 @@ class TouchFilterService : AccessibilityService(), View.OnTouchListener {
     private fun showOverlay() {
         if (overlayView != null) return
 
-        overlayView = View(this).apply {
+        overlayView = View(accessibilityService).apply {
             setBackgroundColor(Color.TRANSPARENT)
-            setOnTouchListener(this@TouchFilterService)
-        }
-
-        val initialFlags = if (AutoScrollState.isScrolling) {
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-        } else {
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+            setOnTouchListener(this@TouchFilterManager)
         }
 
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-            initialFlags,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
         }
 
-        windowManager?.addView(overlayView, params)
+        windowManager.addView(overlayView, params)
     }
 
     private fun hideOverlay() {
         if (overlayView != null) {
-            windowManager?.removeView(overlayView)
+            windowManager.removeView(overlayView)
             overlayView = null
         }
     }
     
-    private fun setOverlayTouchable(touchable: Boolean) {
+    fun setOverlayTouchable(touchable: Boolean) {
         if (overlayView == null) return
         val params = overlayView!!.layoutParams as WindowManager.LayoutParams
         if (touchable) {
@@ -113,7 +107,7 @@ class TouchFilterService : AccessibilityService(), View.OnTouchListener {
         } else {
             params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
         }
-        windowManager?.updateViewLayout(overlayView, params)
+        windowManager.updateViewLayout(overlayView, params)
     }
 
     // Touch Tracking State
@@ -124,7 +118,7 @@ class TouchFilterService : AccessibilityService(), View.OnTouchListener {
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-        if (event == null || !isEnabled || isDispatching || AutoScrollState.isScrolling) return false
+        if (event == null || !isEnabled || isDispatching || isAutoScrolling) return false
 
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
@@ -144,7 +138,6 @@ class TouchFilterService : AccessibilityService(), View.OnTouchListener {
                     val startY = currentPoints.first().second
                     val dist = sqrt((event.rawX - startX) * (event.rawX - startX) + (event.rawY - startY) * (event.rawY - startY))
                     
-                    // Smart Auto-Detect: If they exceed the tremor radius, they are swiping!
                     if (dist > tremorRadius) {
                         isCurrentlySwiping = true
                     }
@@ -153,10 +146,8 @@ class TouchFilterService : AccessibilityService(), View.OnTouchListener {
             }
             MotionEvent.ACTION_UP -> {
                 if (isCurrentlySwiping) {
-                    // Dispatch a straight line swipe to trigger normal scroll/fling
                     dispatchRecordedSwipe(event.rawX, event.rawY)
                 } else {
-                    // It stayed within the tremor radius -> It's a Jittery Tap!
                     val avgX = currentPoints.map { it.first }.average().toFloat()
                     val avgY = currentPoints.map { it.second }.average().toFloat()
                     dispatchStabilizedTap(avgX, avgY)
@@ -178,15 +169,14 @@ class TouchFilterService : AccessibilityService(), View.OnTouchListener {
     private fun dispatchStabilizedTap(x: Float, y: Float) {
         val path = Path().apply { moveTo(x, y) }
         val gesture = GestureDescription.Builder()
-            .addStroke(GestureDescription.StrokeDescription(path, 0, 80)) // 80ms tap
+            .addStroke(GestureDescription.StrokeDescription(path, 0, 80))
             .build()
 
         isDispatching = true
         setOverlayTouchable(false)
         
-        // Wait for WindowManager to asynchronously apply the FLAG_NOT_TOUCHABLE before dispatching
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            dispatchGesture(gesture, object : GestureResultCallback() {
+        Handler(Looper.getMainLooper()).postDelayed({
+            accessibilityService.dispatchGesture(gesture, object : AccessibilityService.GestureResultCallback() {
                 override fun onCompleted(gestureDescription: GestureDescription?) {
                     if (isEnabled) setOverlayTouchable(true)
                     isDispatching = false
@@ -208,7 +198,6 @@ class TouchFilterService : AccessibilityService(), View.OnTouchListener {
             lineTo(endX, endY)
         }
         
-        // Dynamic duration based on their physical swipe speed to retain native fling momentum
         val elapsedMs = System.currentTimeMillis() - swipeStartTime
         val duration = elapsedMs.coerceIn(80L, 400L)
         
@@ -219,8 +208,8 @@ class TouchFilterService : AccessibilityService(), View.OnTouchListener {
         isDispatching = true
         setOverlayTouchable(false)
         
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            dispatchGesture(gesture, object : GestureResultCallback() {
+        Handler(Looper.getMainLooper()).postDelayed({
+            accessibilityService.dispatchGesture(gesture, object : AccessibilityService.GestureResultCallback() {
                 override fun onCompleted(gestureDescription: GestureDescription?) {
                     if (isEnabled) setOverlayTouchable(true)
                     isDispatching = false
@@ -233,11 +222,7 @@ class TouchFilterService : AccessibilityService(), View.OnTouchListener {
         }, 50L)
     }
 
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
-    override fun onInterrupt() {}
-    
-    override fun onDestroy() {
-        super.onDestroy()
+    fun onDestroy() {
         hideOverlay()
     }
 }

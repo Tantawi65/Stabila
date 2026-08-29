@@ -6,7 +6,7 @@ import android.content.Intent
 import android.graphics.Path
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
-import com.stabila.core.accessibility.AutoScrollState
+
 import com.stabila.core.data.UserPreferencesDataStore
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CompletableDeferred
@@ -24,6 +24,11 @@ import kotlin.math.max
 @AndroidEntryPoint
 class StabilaAccessibilityService : AccessibilityService() {
 
+    companion object {
+        @Volatile
+        var isInjectingGesture = false
+    }
+
     @Inject
     lateinit var userPreferences: UserPreferencesDataStore
 
@@ -34,6 +39,7 @@ class StabilaAccessibilityService : AccessibilityService() {
     private val scope = CoroutineScope(Dispatchers.Main + job)
 
     private lateinit var overlayManager: OverlayManager
+    private lateinit var touchFilterManager: TouchFilterManager
 
     private var currentPackageName: String = ""
     private var isScrolling = false
@@ -42,17 +48,59 @@ class StabilaAccessibilityService : AccessibilityService() {
     // We fetch these from DataStore when entering a new app or on resume
     private var currentScrollSpeed = 3f
     private var enabledApps = setOf<String>()
+    private var isMasterEnabled = true
     
-    // Store the latest score
     private var latestTremorScore = 0f
+
+    private var screenStateReceiver: android.content.BroadcastReceiver? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
         overlayManager = OverlayManager(this)
+        touchFilterManager = TouchFilterManager(this, userPreferences)
+
+        val filter = android.content.IntentFilter().apply {
+            addAction(android.content.Intent.ACTION_SCREEN_OFF)
+            addAction(android.content.Intent.ACTION_USER_PRESENT)
+        }
+        screenStateReceiver = object : android.content.BroadcastReceiver() {
+            override fun onReceive(context: android.content.Context?, intent: android.content.Intent?) {
+                when (intent?.action) {
+                    android.content.Intent.ACTION_SCREEN_OFF -> {
+                        stopScrollingAndHideUI()
+                        currentPackageName = ""
+                    }
+                    android.content.Intent.ACTION_USER_PRESENT -> {
+                        // When unlocked, the foreground app will trigger a WINDOW_STATE_CHANGED event,
+                        // and since we reset currentPackageName to empty, it will successfully trigger onAppSwitched.
+                    }
+                }
+            }
+        }
+        registerReceiver(screenStateReceiver, filter)
         
         scope.launch {
-            currentScrollSpeed = userPreferences.autoScrollSpeed.first()
-            enabledApps = userPreferences.enabledScrollApps.first()
+            userPreferences.isAutoScrollMasterEnabled.collect { enabled ->
+                isMasterEnabled = enabled
+                if (currentPackageName.isNotEmpty()) {
+                    onAppSwitched(currentPackageName)
+                }
+            }
+        }
+
+        scope.launch {
+            userPreferences.enabledScrollApps.collect { apps ->
+                enabledApps = apps
+                if (currentPackageName.isNotEmpty()) {
+                    onAppSwitched(currentPackageName)
+                }
+            }
+        }
+
+        scope.launch {
+            userPreferences.autoScrollSpeed.collect { speed ->
+                currentScrollSpeed = speed
+            }
         }
         
         scope.launch {
@@ -86,12 +134,14 @@ class StabilaAccessibilityService : AccessibilityService() {
     }
 
     private fun onAppSwitched(packageName: String) {
-        scope.launch {
-            // Refresh preferences
-            enabledApps = userPreferences.enabledScrollApps.first()
-            currentScrollSpeed = userPreferences.autoScrollSpeed.first()
+        val keyguardManager = getSystemService(android.content.Context.KEYGUARD_SERVICE) as android.app.KeyguardManager
+        if (keyguardManager.isKeyguardLocked) {
+            stopScrollingAndHideUI()
+            return
+        }
 
-            val isAppEnabled = enabledApps.contains(packageName) || enabledApps.contains("all")
+        scope.launch {
+            val isAppEnabled = isMasterEnabled && (enabledApps.contains(packageName) || enabledApps.contains("all"))
 
             if (isAppEnabled) {
                 // If auto-scroll is already running, keep scrolling!
@@ -107,7 +157,8 @@ class StabilaAccessibilityService : AccessibilityService() {
 
     private fun enterStateB() {
         isScrolling = false
-        AutoScrollState.isScrolling = false
+        touchFilterManager.isAutoScrolling = false
+        
         scrollJob?.cancel()
         
         overlayManager.hideInvisibleShield()
@@ -134,25 +185,16 @@ class StabilaAccessibilityService : AccessibilityService() {
 
     private fun enterStateA() {
         isScrolling = true
-        AutoScrollState.isScrolling = true
+        touchFilterManager.isAutoScrolling = true
+        
         
         scope.launch {
             val savedX = userPreferences.autoScrollButtonX.first()
             val savedY = userPreferences.autoScrollButtonY.first()
             val tremorScore = latestTremorScore
 
-            overlayManager.showFloatingButton(
-                tremorScore = tremorScore,
-                savedX = savedX,
-                savedY = savedY,
-                isScrolling = true,
-                onToggleScroll = { toggleScrollingState() },
-                onPositionSaved = { x, y ->
-                    scope.launch {
-                        userPreferences.setAutoScrollButtonPosition(x, y)
-                    }
-                }
-            )
+            // Disappear floating button when playing
+            overlayManager.hideFloatingButton()
 
             // Show the invisible shield that acts as the emergency brake
             overlayManager.showInvisibleShield {
@@ -174,7 +216,8 @@ class StabilaAccessibilityService : AccessibilityService() {
 
     private fun stopScrollingAndHideUI() {
         isScrolling = false
-        AutoScrollState.isScrolling = false
+        touchFilterManager.isAutoScrolling = false
+        
         scrollJob?.cancel()
         overlayManager.hideAll()
     }
@@ -232,19 +275,18 @@ class StabilaAccessibilityService : AccessibilityService() {
 
         val stepCompleted = CompletableDeferred<Unit>()
 
-        // Temporarily pass touches through shield so synthetic gesture stroke is delivered to target app
-        overlayManager.setShieldTouchable(false)
+        isInjectingGesture = true
 
         dispatchGesture(gesture, object : AccessibilityService.GestureResultCallback() {
             override fun onCompleted(gestureDescription: GestureDescription?) {
                 super.onCompleted(gestureDescription)
-                overlayManager.setShieldTouchable(true)
+                isInjectingGesture = false
                 stepCompleted.complete(Unit)
             }
 
             override fun onCancelled(gestureDescription: GestureDescription?) {
                 super.onCancelled(gestureDescription)
-                overlayManager.setShieldTouchable(true)
+                isInjectingGesture = false
                 stepCompleted.complete(Unit)
             }
         }, null)
@@ -261,7 +303,9 @@ class StabilaAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
         super.onDestroy()
-        AutoScrollState.isScrolling = false
+        
+        screenStateReceiver?.let { unregisterReceiver(it) }
+        
         job.cancel()
         overlayManager.hideAll()
     }

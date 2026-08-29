@@ -117,7 +117,7 @@ fun TouchStabilizerScreen(
                             val isOverlayEnabled = android.provider.Settings.canDrawOverlays(context)
 
                             if (!isAccessibilityEnabled) {
-                                android.widget.Toast.makeText(context, "Please enable Stabila Touch Filter in Accessibility", android.widget.Toast.LENGTH_LONG).show()
+                                android.widget.Toast.makeText(context, "Please enable Stabila Accessibility Service", android.widget.Toast.LENGTH_LONG).show()
                                 context.startActivity(android.content.Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS))
                             } else if (!isOverlayEnabled) {
                                 android.widget.Toast.makeText(context, "Please allow Display Over Other Apps", android.widget.Toast.LENGTH_LONG).show()
