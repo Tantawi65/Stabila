@@ -212,14 +212,56 @@ fun CalibrationGameBox(
             // Playing State
             val target = targetPositions[currentTargetIndex]
             
-            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown()
+                            val downTime = System.currentTimeMillis()
+                            val points = mutableListOf(down.position)
+                            
+                            // Collect points while pressed
+                            do {
+                                val event = awaitPointerEvent()
+                                event.changes.forEach { if (it.pressed) points.add(it.position) }
+                            } while (event.changes.any { it.pressed })
+                            
+                            val upTime = System.currentTimeMillis()
+                            val duration = upTime - downTime
+                            
+                            // Calculate scatter from center of mass
+                            val avgX = points.map { it.x }.average().toFloat()
+                            val avgY = points.map { it.y }.average().toFloat()
+                            
+                            var maxR = 0f
+                            for (p in points) {
+                                val dist = sqrt((p.x - avgX) * (p.x - avgX) + (p.y - avgY) * (p.y - avgY))
+                                if (dist > maxR) maxR = dist
+                            }
+                            
+                            maxRadiusCalculated = max(maxRadiusCalculated, maxR)
+                            
+                            // Running average for duration
+                            avgDurationCalculated = if (currentTargetIndex == 0) duration else (avgDurationCalculated * currentTargetIndex + duration) / (currentTargetIndex + 1)
+                            
+                            // Next target
+                            if (currentTargetIndex < targetPositions.size - 1) {
+                                currentTargetIndex++
+                            } else {
+                                onCalibrationComplete(maxRadiusCalculated)
+                                gameState = 2
+                            }
+                        }
+                    }
+            ) {
                 val width = constraints.maxWidth
                 val height = constraints.maxHeight
                 
                 val absX = target.x * width
                 val absY = target.y * height
 
-                // The Target Dot
+                // The Target Dot (Visual Only)
                 Box(
                     modifier = Modifier
                         .offset(
@@ -229,45 +271,6 @@ fun CalibrationGameBox(
                         .size(56.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-                        .pointerInput(Unit) {
-                            awaitEachGesture {
-                                val down = awaitFirstDown()
-                                val downTime = System.currentTimeMillis()
-                                val points = mutableListOf(down.position)
-                                
-                                // Collect points while pressed
-                                do {
-                                    val event = awaitPointerEvent()
-                                    event.changes.forEach { if (it.pressed) points.add(it.position) }
-                                } while (event.changes.any { it.pressed })
-                                
-                                val upTime = System.currentTimeMillis()
-                                val duration = upTime - downTime
-                                
-                                // Calculate scatter from center of mass
-                                val avgX = points.map { it.x }.average().toFloat()
-                                val avgY = points.map { it.y }.average().toFloat()
-                                
-                                var maxR = 0f
-                                for (p in points) {
-                                    val dist = sqrt((p.x - avgX) * (p.x - avgX) + (p.y - avgY) * (p.y - avgY))
-                                    if (dist > maxR) maxR = dist
-                                }
-                                
-                                maxRadiusCalculated = max(maxRadiusCalculated, maxR)
-                                
-                                // Running average for duration
-                                avgDurationCalculated = if (currentTargetIndex == 0) duration else (avgDurationCalculated * currentTargetIndex + duration) / (currentTargetIndex + 1)
-                                
-                                // Next target
-                                if (currentTargetIndex < targetPositions.size - 1) {
-                                    currentTargetIndex++
-                                } else {
-                                    onCalibrationComplete(maxRadiusCalculated)
-                                    gameState = 2
-                                }
-                            }
-                        }
                 ) {
                     // Inner solid dot
                     Box(modifier = Modifier.size(24.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary).align(Alignment.Center))
