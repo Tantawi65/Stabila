@@ -2,6 +2,7 @@ package com.stabila.core.ui
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.runtime.getValue
@@ -24,14 +25,20 @@ import kotlinx.coroutines.withTimeout
  * A custom modifier that stabilizes touch input for users with tremors.
  * It waits for a short window (e.g. 300ms), collects all jittery touch points,
  * calculates the common center (Centroid), and triggers the click if the 
- * centroid is within the bounds (or simply triggers it like a stabilized button).
+ * centroid is within the bounds.
  * 
- * Also provides a specialized "Visual Snap" cue so the user sees the math happening.
+ * It properly delegates to standard compose clickable when disabled,
+ * and correctly aborts if a parent scroll container intercepts the gesture.
  */
 fun Modifier.stabilizedClick(
     enabled: Boolean = true,
     onClick: () -> Unit
 ): Modifier = composed {
+    if (!enabled) {
+        // When disabled, use standard Compose clickable which perfectly handles scroll cancellation
+        return@composed this.clickable { onClick() }
+    }
+
     var clickCenter by remember { mutableStateOf<Offset?>(null) }
     var showSnap by remember { mutableStateOf(false) }
     
@@ -41,37 +48,33 @@ fun Modifier.stabilizedClick(
     val scope = rememberCoroutineScope()
 
     this
-        .pointerInput(enabled) {
-            if (!enabled) {
-                // If not enabled, just behave like a normal click, but we don't have standard clickable here.
-                // We'll just listen to simple taps.
-                awaitEachGesture {
-                    val down = awaitFirstDown()
-                    // wait for up
-                    do {
-                        val event = awaitPointerEvent()
-                    } while (event.changes.any { it.pressed })
-                    onClick()
-                }
-                return@pointerInput
-            }
-
+        .pointerInput(Unit) {
             awaitEachGesture {
-                val initialDown = awaitFirstDown()
+                val initialDown = awaitFirstDown(requireUnconsumed = false)
                 val points = mutableListOf(initialDown.position)
-                initialDown.consume()
+                
+                // Do NOT consume the down event aggressively! 
+                // If we consume it, parent scroll containers can't detect dragging.
                 
                 var isReleased = false
+                var isCanceled = false
                 
                 // Collect points for up to 350ms to calculate the point cloud
                 try {
                     withTimeout(350) {
                         while (true) {
                             val event = awaitPointerEvent()
+                            
+                            // If a parent (like a ScrollView) consumed the event, it means the user is scrolling.
+                            if (event.changes.any { it.isConsumed }) {
+                                isCanceled = true
+                                break
+                            }
+
                             event.changes.forEach { change ->
                                 if (change.pressed) {
                                     points.add(change.position)
-                                    change.consume()
+                                    // Intentionally not consuming position change so scroll container can monitor touch slop
                                 } else {
                                     isReleased = true
                                 }
@@ -83,16 +86,26 @@ fun Modifier.stabilizedClick(
                     // Time is up, we collected the point cloud!
                 }
 
-                // Wait for the user to lift their finger if they haven't yet,
-                // so we don't trigger the click while they are still holding.
+                if (isCanceled) {
+                    return@awaitEachGesture
+                }
+
+                // Wait for the user to lift their finger if they haven't yet
                 if (!isReleased) {
                     while (true) {
                         val event = awaitPointerEvent()
-                        event.changes.forEach { it.consume() }
+                        if (event.changes.any { it.isConsumed }) {
+                            isCanceled = true
+                            break
+                        }
                         if (event.changes.any { !it.pressed }) {
                             break
                         }
                     }
+                }
+
+                if (isCanceled) {
+                    return@awaitEachGesture
                 }
 
                 // Calculate Centroid (Common Center Point)
