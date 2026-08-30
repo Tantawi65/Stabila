@@ -36,3 +36,8 @@ gradle/wrapper/gradle-wrapper.jar
 
 # Local configuration
 local.properties
+
+# JVM Crash Logs
+hs_err_pid*.log
+replay_pid*.log
+build_output.log
