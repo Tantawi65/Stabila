@@ -83,10 +83,24 @@ class StabilaKeyboardService : InputMethodService(), LifecycleOwner, ViewModelSt
                         },
                         onEnter = {
                             val info = currentInputEditorInfo
-                            val action = info?.imeOptions?.and(android.view.inputmethod.EditorInfo.IME_MASK_ACTION) ?: 0
-                            if (action != android.view.inputmethod.EditorInfo.IME_ACTION_NONE && action != android.view.inputmethod.EditorInfo.IME_ACTION_UNSPECIFIED) {
+                            val inputType = info?.inputType ?: 0
+                            val imeOptions = info?.imeOptions ?: 0
+                            
+                            val isMultiLine = (inputType and android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE) != 0
+                            val flagNoEnterAction = (imeOptions and android.view.inputmethod.EditorInfo.IME_FLAG_NO_ENTER_ACTION) != 0
+                            val action = imeOptions and android.view.inputmethod.EditorInfo.IME_MASK_ACTION
+                            
+                            val hasExplicitAction = action != android.view.inputmethod.EditorInfo.IME_ACTION_NONE && 
+                                                    action != android.view.inputmethod.EditorInfo.IME_ACTION_UNSPECIFIED
+                            
+                            if (hasExplicitAction && !flagNoEnterAction) {
+                                // App explicitly requested an action (e.g. Search in Google App, Go, Send, Next, Done)
                                 currentInputConnection?.performEditorAction(action)
+                            } else if (isMultiLine || flagNoEnterAction) {
+                                // Multi-line fields without explicit action (e.g. WhatsApp chat, Notes) -> insert newline
+                                currentInputConnection?.commitText("\n", 1)
                             } else {
+                                // Single-line fields without explicit action -> send Enter key events
                                 currentInputConnection?.sendKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_ENTER))
                                 currentInputConnection?.sendKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_ENTER))
                             }
