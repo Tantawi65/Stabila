@@ -41,7 +41,16 @@ class StabilaKeyboardService : InputMethodService(), LifecycleOwner, ViewModelSt
     override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
 
     private val tremorScoreState = androidx.compose.runtime.mutableFloatStateOf(-1f)
+    private val undoStack = androidx.compose.runtime.mutableStateListOf<String>()
     private lateinit var prefs: android.content.SharedPreferences
+
+    private fun pushUndo(text: String) {
+        if (text.isEmpty()) return
+        undoStack.add(text)
+        if (undoStack.size > 30) {
+            undoStack.removeAt(0)
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -54,8 +63,6 @@ class StabilaKeyboardService : InputMethodService(), LifecycleOwner, ViewModelSt
         super.onStartInputView(info, restarting)
         tremorScoreState.floatValue = prefs.getFloat("last_tremor_score", -1f)
     }
-
-
 
     override fun onCreateInputView(): View {
         val container = object : FrameLayout(this) {
@@ -75,11 +82,59 @@ class StabilaKeyboardService : InputMethodService(), LifecycleOwner, ViewModelSt
                 StabilaTheme {
                     com.stabila.feature.keyboard.ui.StabilaKeyboardLayout(
                         tremorScore = tremorScoreState.floatValue,
+                        canUndo = undoStack.isNotEmpty(),
                         onKeyPress = { char ->
                             currentInputConnection?.commitText(char, 1)
                         },
                         onDelete = {
-                            currentInputConnection?.deleteSurroundingText(1, 0)
+                            val ic = currentInputConnection
+                            if (ic != null) {
+                                val textBefore = ic.getTextBeforeCursor(1, 0)?.toString() ?: ""
+                                if (textBefore.isNotEmpty()) {
+                                    pushUndo(textBefore)
+                                }
+                                ic.deleteSurroundingText(1, 0)
+                            }
+                        },
+                        onDeleteWord = {
+                            val ic = currentInputConnection
+                            if (ic != null) {
+                                val textBefore = ic.getTextBeforeCursor(100, 0)?.toString() ?: ""
+                                if (textBefore.isNotEmpty()) {
+                                    var i = textBefore.length - 1
+                                    while (i >= 0 && textBefore[i].isWhitespace()) {
+                                        i--
+                                    }
+                                    while (i >= 0 && !textBefore[i].isWhitespace()) {
+                                        i--
+                                    }
+                                    val count = textBefore.length - (i + 1)
+                                    if (count > 0) {
+                                        val deleted = textBefore.substring(textBefore.length - count)
+                                        pushUndo(deleted)
+                                        ic.deleteSurroundingText(count, 0)
+                                    }
+                                }
+                            }
+                        },
+                        onClearAll = {
+                            val ic = currentInputConnection
+                            if (ic != null) {
+                                val textBefore = ic.getTextBeforeCursor(2000, 0)?.toString() ?: ""
+                                val textAfter = ic.getTextAfterCursor(2000, 0)?.toString() ?: ""
+                                val fullText = textBefore + textAfter
+                                if (fullText.isNotEmpty()) {
+                                    pushUndo(fullText)
+                                    ic.deleteSurroundingText(textBefore.length, textAfter.length)
+                                }
+                            }
+                        },
+                        onUndo = {
+                            val ic = currentInputConnection
+                            if (ic != null && undoStack.isNotEmpty()) {
+                                val lastDeleted = undoStack.removeAt(undoStack.lastIndex)
+                                ic.commitText(lastDeleted, 1)
+                            }
                         },
                         onEnter = {
                             val info = currentInputEditorInfo

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.SpaceBar
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.KeyboardReturn
@@ -33,8 +34,12 @@ enum class KeyboardState { NORMAL, MAGNIFIED }
 @Composable
 fun StabilaKeyboardLayout(
     tremorScore: Float,
+    canUndo: Boolean = false,
     onKeyPress: (String) -> Unit,
     onDelete: () -> Unit,
+    onDeleteWord: () -> Unit = {},
+    onClearAll: () -> Unit = {},
+    onUndo: () -> Unit = {},
     onEnter: () -> Unit
 ) {
     val useMagnifier = tremorScore > 20f
@@ -46,7 +51,7 @@ fun StabilaKeyboardLayout(
     var symbolState by remember { mutableIntStateOf(0) } // 0=letters, 1=symbols1, 2=symbols2
     var isArabic by remember { mutableStateOf(false) } // true=AR, false=EN
 
-    val targetHeight = if (currentState == KeyboardState.MAGNIFIED) 450.dp else 300.dp
+    val targetHeight = if (currentState == KeyboardState.MAGNIFIED) 420.dp else 300.dp
     val animatedHeight by animateDpAsState(targetValue = targetHeight, label = "KeyboardHeight")
 
     Box(
@@ -62,6 +67,7 @@ fun StabilaKeyboardLayout(
                         isShift = isShift,
                         symbolState = symbolState,
                         isArabic = isArabic,
+                        canUndo = canUndo,
                         onShiftChange = { isShift = it },
                         onSymbolStateChange = { symbolState = it },
                         onLanguageToggle = { isArabic = !isArabic; symbolState = 0 },
@@ -74,6 +80,9 @@ fun StabilaKeyboardLayout(
                             }
                         },
                         onDelete = onDelete,
+                        onDeleteWord = onDeleteWord,
+                        onClearAll = onClearAll,
+                        onUndo = onUndo,
                         onSpace = { onKeyPress(" ") },
                         onEnter = onEnter
                     )
@@ -102,11 +111,15 @@ private fun NormalKeyboard(
     isShift: Boolean,
     symbolState: Int,
     isArabic: Boolean,
+    canUndo: Boolean,
     onShiftChange: (Boolean) -> Unit,
     onSymbolStateChange: (Int) -> Unit,
     onLanguageToggle: () -> Unit,
     onCharPress: (Char) -> Unit,
     onDelete: () -> Unit,
+    onDeleteWord: () -> Unit,
+    onClearAll: () -> Unit,
+    onUndo: () -> Unit,
     onSpace: () -> Unit,
     onEnter: () -> Unit
 ) {
@@ -141,9 +154,18 @@ private fun NormalKeyboard(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(4.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+            .padding(3.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
+        // Top Action Navigation Bar
+        KeyboardTopBar(
+            isArabic = isArabic,
+            canUndo = canUndo,
+            onDeleteWord = onDeleteWord,
+            onClearAll = onClearAll,
+            onUndo = onUndo
+        )
+
         // Row 1
         KeyboardRow(currentRows[0], isShift, onCharPress)
         
@@ -152,7 +174,7 @@ private fun NormalKeyboard(
         
         // Row 3
         Row(
-            modifier = Modifier.fillMaxWidth().weight(1f).padding(bottom = 8.dp),
+            modifier = Modifier.fillMaxWidth().weight(1f).padding(bottom = 2.dp),
             horizontalArrangement = Arrangement.Center
         ) {
             if (!(isArabic && symbolState == 0)) {
@@ -264,7 +286,7 @@ private fun ColumnScope.KeyboardRow(
     onCharPress: (Char) -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().weight(1f).padding(bottom = 8.dp),
+        modifier = Modifier.fillMaxWidth().weight(1f).padding(bottom = 2.dp),
         horizontalArrangement = Arrangement.Center
     ) {
         if (row.size == 9) { 
@@ -349,6 +371,68 @@ private fun MagnifiedKeyboard(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.KeyboardTopBar(
+    isArabic: Boolean,
+    canUndo: Boolean,
+    onDeleteWord: () -> Unit,
+    onClearAll: () -> Unit,
+    onUndo: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .weight(1f)
+            .padding(bottom = 3.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Delete Word Button
+        ActionKey(
+            modifier = Modifier.weight(2.2f),
+            backgroundColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            onClick = onDeleteWord
+        ) {
+            Text(
+                text = if (isArabic) "حذف كلمة" else "Delete Word",
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, fontSize = 13.sp),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+
+        // Clear All Button
+        ActionKey(
+            modifier = Modifier.weight(2.2f),
+            backgroundColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.85f),
+            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+            onClick = onClearAll
+        ) {
+            Text(
+                text = if (isArabic) "مسح الكل" else "Clear All",
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, fontSize = 13.sp),
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+        }
+
+        // Undo Icon Button
+        ActionKey(
+            modifier = Modifier.weight(1.2f),
+            backgroundColor = if (canUndo) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+            contentColor = if (canUndo) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+            onClick = {
+                if (canUndo) onUndo()
+            }
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.Undo,
+                contentDescription = if (isArabic) "تراجع" else "Undo",
+                tint = if (canUndo) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+            )
         }
     }
 }
