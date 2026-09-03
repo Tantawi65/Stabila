@@ -30,17 +30,33 @@ import androidx.compose.ui.unit.sp
 
 enum class KeyboardState { NORMAL, MAGNIFIED }
 
+/**
+ * Root keyboard layout composable.
+ *
+ * New parameters compared to the original:
+ * @param suggestions     The current list of word suggestions (up to 3). May be
+ *                        empty when there is nothing to suggest.
+ * @param suggestionsEnabled Whether the target field allows suggestions at all
+ *                        (determined from [EditorInfo] by the service).
+ * @param onSuggestionSelected Called when the user taps a suggestion chip.
+ *
+ * All other parameters and behaviour are unchanged.
+ */
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun StabilaKeyboardLayout(
     tremorScore: Float,
     canUndo: Boolean = false,
+    suggestions: List<String> = emptyList(),
+    suggestionsEnabled: Boolean = false,
+    onSuggestionSelected: (String) -> Unit = {},
+    onLanguageChange: (Boolean) -> Unit = {},
     onKeyPress: (String) -> Unit,
     onDelete: () -> Unit,
     onDeleteWord: () -> Unit = {},
     onClearAll: () -> Unit = {},
     onUndo: () -> Unit = {},
-    onEnter: () -> Unit
+    onEnter: () -> Unit,
 ) {
     val useMagnifier = tremorScore > 20f
     var currentState by remember { mutableStateOf(KeyboardState.NORMAL) }
@@ -51,14 +67,21 @@ fun StabilaKeyboardLayout(
     var symbolState by remember { mutableIntStateOf(0) } // 0=letters, 1=symbols1, 2=symbols2
     var isArabic by remember { mutableStateOf(false) } // true=AR, false=EN
 
-    val targetHeight = if (currentState == KeyboardState.MAGNIFIED) 420.dp else 300.dp
+    // In MAGNIFIED mode the suggestion bar is not shown, so height stays 420dp.
+    // In NORMAL mode, when suggestions are active we add BAR_HEIGHT to keep the key sizes
+    // identical to the original 300dp layout. When there are no suggestions, height remains 300dp.
+    val hasSuggestions = suggestionsEnabled && symbolState == 0 && suggestions.isNotEmpty()
+    val targetHeight = if (currentState == KeyboardState.MAGNIFIED) 420.dp
+    else if (hasSuggestions) 300.dp + BAR_HEIGHT
+    else 300.dp
+
     val animatedHeight by animateDpAsState(targetValue = targetHeight, label = "KeyboardHeight")
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(animatedHeight)
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .background(MaterialTheme.colorScheme.surfaceVariant),
     ) {
         AnimatedContent(targetState = currentState, label = "KeyboardState") { state ->
             when (state) {
@@ -68,9 +91,16 @@ fun StabilaKeyboardLayout(
                         symbolState = symbolState,
                         isArabic = isArabic,
                         canUndo = canUndo,
+                        suggestions = suggestions,
+                        suggestionsEnabled = suggestionsEnabled,
+                        onSuggestionSelected = onSuggestionSelected,
                         onShiftChange = { isShift = it },
                         onSymbolStateChange = { symbolState = it },
-                        onLanguageToggle = { isArabic = !isArabic; symbolState = 0 },
+                        onLanguageToggle = {
+                            isArabic = !isArabic
+                            symbolState = 0
+                            onLanguageChange(isArabic)
+                        },
                         onCharPress = { char ->
                             if (useMagnifier) {
                                 magnifiedCenterKey = char
@@ -84,7 +114,7 @@ fun StabilaKeyboardLayout(
                         onClearAll = onClearAll,
                         onUndo = onUndo,
                         onSpace = { onKeyPress(" ") },
-                        onEnter = onEnter
+                        onEnter = onEnter,
                     )
                 }
                 KeyboardState.MAGNIFIED -> {
@@ -98,7 +128,7 @@ fun StabilaKeyboardLayout(
                         },
                         onCancel = {
                             currentState = KeyboardState.NORMAL
-                        }
+                        },
                     )
                 }
             }
@@ -112,6 +142,9 @@ private fun NormalKeyboard(
     symbolState: Int,
     isArabic: Boolean,
     canUndo: Boolean,
+    suggestions: List<String>,
+    suggestionsEnabled: Boolean,
+    onSuggestionSelected: (String) -> Unit,
     onShiftChange: (Boolean) -> Unit,
     onSymbolStateChange: (Int) -> Unit,
     onLanguageToggle: () -> Unit,
@@ -121,7 +154,7 @@ private fun NormalKeyboard(
     onClearAll: () -> Unit,
     onUndo: () -> Unit,
     onSpace: () -> Unit,
-    onEnter: () -> Unit
+    onEnter: () -> Unit,
 ) {
     val letterRowsEN = listOf(
         "qwertyuiop".toList(),
@@ -135,13 +168,13 @@ private fun NormalKeyboard(
     )
     val symbolRows1 = listOf(
         "1234567890".toList(),
-        "@#£_&-+()\"".toList(),
-        "*\"':;!?~`|".toList()
+        "@#£_&-+()\u0022".toList(),
+        "*\u0022':;!?~`|".toList()
     )
     val symbolRows2 = listOf(
         "~`|•√π÷×¶∆".toList(),
-        "£¢€¥^°={}\\".toList(),
-        "%©®™✓[]<> ".toList() // Add space at the end to make it 10 chars
+        "£¢€¥^°={}\u0022".toList(),
+        "%©®™✓[]<> ".toList() // space placeholder at end
     )
 
     val currentRows = when {
@@ -151,36 +184,51 @@ private fun NormalKeyboard(
         else -> letterRowsEN
     }
 
+    val hasSuggestions = suggestionsEnabled && symbolState == 0 && suggestions.isNotEmpty()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(3.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp)
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        // Top Action Navigation Bar
+        // ── 1. Top Action Navigation Bar (Clear, Clear Word, Undo) ────────────
         KeyboardTopBar(
             isArabic = isArabic,
             canUndo = canUndo,
             onDeleteWord = onDeleteWord,
             onClearAll = onClearAll,
-            onUndo = onUndo
+            onUndo = onUndo,
         )
 
-        // Row 1
+        // ── 2. Suggestion bar (under action bar; dynamic and only when suggestions exist) ─
+        if (hasSuggestions) {
+            SuggestionBar(
+                suggestions = suggestions,
+                onSuggestionSelected = onSuggestionSelected,
+            )
+        }
+
+        // ── Row 1 ─────────────────────────────────────────────────────────────
         KeyboardRow(currentRows[0], isShift, onCharPress)
-        
-        // Row 2
+
+        // ── Row 2 ─────────────────────────────────────────────────────────────
         KeyboardRow(currentRows[1], isShift, onCharPress)
-        
-        // Row 3
+
+        // ── Row 3 (shift / letters row 3 / delete) ────────────────────────────
         Row(
-            modifier = Modifier.fillMaxWidth().weight(1f).padding(bottom = 2.dp),
-            horizontalArrangement = Arrangement.Center
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .padding(bottom = 2.dp),
+            horizontalArrangement = Arrangement.Center,
         ) {
             if (!(isArabic && symbolState == 0)) {
                 ActionKey(
-                    modifier = Modifier.weight(1.5f).padding(horizontal = 2.dp),
-                    onClick = { 
+                    modifier = Modifier
+                        .weight(1.5f)
+                        .padding(horizontal = 2.dp),
+                    onClick = {
                         if (symbolState == 0) {
                             onShiftChange(!isShift)
                         } else if (symbolState == 1) {
@@ -188,13 +236,14 @@ private fun NormalKeyboard(
                         } else {
                             onSymbolStateChange(1)
                         }
-                    }
+                    },
                 ) {
                     if (symbolState == 0) {
                         Icon(
-                            Icons.Default.KeyboardArrowUp, 
+                            Icons.Default.KeyboardArrowUp,
                             contentDescription = "Shift",
-                            tint = if (isShift) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            tint = if (isShift) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurface,
                         )
                     } else if (symbolState == 1) {
                         Text("=\\<", color = MaterialTheme.colorScheme.onSurface)
@@ -203,77 +252,106 @@ private fun NormalKeyboard(
                     }
                 }
             }
-            
+
             currentRows[2].forEach { char ->
                 if (char == ' ') {
                     Spacer(modifier = Modifier.weight(1f).padding(horizontal = 2.dp))
                 } else {
                     KeyButton(
                         text = if (isShift && char.isLetter()) char.uppercase() else char.toString(),
-                        modifier = Modifier.weight(1f).padding(horizontal = 2.dp).fillMaxHeight(),
-                        onClick = { 
-                            onCharPress(if (isShift && char.isLetter()) char.uppercaseChar() else char) 
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 2.dp)
+                            .fillMaxHeight(),
+                        onClick = {
+                            onCharPress(if (isShift && char.isLetter()) char.uppercaseChar() else char)
                             if (isShift) onShiftChange(false)
-                        }
+                        },
                     )
                 }
             }
-            
+
             ActionKey(
-                modifier = Modifier.weight(1.5f).padding(horizontal = 2.dp),
-                onClick = onDelete
+                modifier = Modifier
+                    .weight(1.5f)
+                    .padding(horizontal = 2.dp),
+                onClick = onDelete,
             ) {
                 Icon(Icons.AutoMirrored.Filled.Backspace, contentDescription = "Delete")
             }
         }
-        
-        // Row 4
+
+        // ── Row 4 (symbols toggle / lang / comma / space / period / enter) ────
         Row(
-            modifier = Modifier.fillMaxWidth().weight(1f),
-            horizontalArrangement = Arrangement.Center
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            horizontalArrangement = Arrangement.Center,
         ) {
             ActionKey(
-                modifier = Modifier.weight(1.5f).padding(horizontal = 2.dp),
-                onClick = { 
-                    if (symbolState == 0) onSymbolStateChange(1) else onSymbolStateChange(0) 
-                }
+                modifier = Modifier
+                    .weight(1.5f)
+                    .padding(horizontal = 2.dp),
+                onClick = {
+                    if (symbolState == 0) onSymbolStateChange(1) else onSymbolStateChange(0)
+                },
             ) {
-                Text(if (symbolState != 0) (if (isArabic) "أ ب ت" else "ABC") else "?123", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+                Text(
+                    if (symbolState != 0) (if (isArabic) "أ ب ت" else "ABC") else "?123",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
             }
-            
+
             ActionKey(
-                modifier = Modifier.weight(1f).padding(horizontal = 2.dp),
-                onClick = onLanguageToggle
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 2.dp),
+                onClick = onLanguageToggle,
             ) {
                 Icon(Icons.Default.Language, contentDescription = "Language")
             }
-            
+
             KeyButton(
                 text = ",",
-                modifier = Modifier.weight(1f).padding(horizontal = 2.dp).fillMaxHeight(),
-                onClick = { onCharPress(',') }
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 2.dp)
+                    .fillMaxHeight(),
+                onClick = { onCharPress(',') },
             )
-            
+
             ActionKey(
-                modifier = Modifier.weight(3f).padding(horizontal = 2.dp),
-                onClick = onSpace
+                modifier = Modifier
+                    .weight(3f)
+                    .padding(horizontal = 2.dp),
+                onClick = onSpace,
             ) {
                 Icon(Icons.Default.SpaceBar, contentDescription = "Space")
             }
-            
+
             KeyButton(
                 text = ".",
-                modifier = Modifier.weight(1f).padding(horizontal = 2.dp).fillMaxHeight(),
-                onClick = { onCharPress('.') }
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 2.dp)
+                    .fillMaxHeight(),
+                onClick = { onCharPress('.') },
             )
-            
+
             ActionKey(
-                modifier = Modifier.weight(1.5f).padding(horizontal = 2.dp),
+                modifier = Modifier
+                    .weight(1.5f)
+                    .padding(horizontal = 2.dp),
                 backgroundColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
-                onClick = onEnter
+                onClick = onEnter,
             ) {
-                Icon(Icons.Default.KeyboardReturn, contentDescription = "Enter", tint = MaterialTheme.colorScheme.onPrimary)
+                Icon(
+                    Icons.Default.KeyboardReturn,
+                    contentDescription = "Enter",
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                )
             }
         }
     }
@@ -283,20 +361,26 @@ private fun NormalKeyboard(
 private fun ColumnScope.KeyboardRow(
     row: List<Char>,
     isShift: Boolean,
-    onCharPress: (Char) -> Unit
+    onCharPress: (Char) -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().weight(1f).padding(bottom = 2.dp),
-        horizontalArrangement = Arrangement.Center
+        modifier = Modifier
+            .fillMaxWidth()
+            .weight(1f)
+            .padding(bottom = 2.dp),
+        horizontalArrangement = Arrangement.Center,
     ) {
-        if (row.size == 9) { 
+        if (row.size == 9) {
             Spacer(modifier = Modifier.weight(0.5f))
         }
         row.forEach { char ->
             KeyButton(
                 text = if (isShift && char.isLetter()) char.uppercase() else char.toString(),
-                modifier = Modifier.weight(1f).padding(horizontal = 2.dp).fillMaxHeight(),
-                onClick = { onCharPress(if (isShift && char.isLetter()) char.uppercaseChar() else char) }
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 2.dp)
+                    .fillMaxHeight(),
+                onClick = { onCharPress(if (isShift && char.isLetter()) char.uppercaseChar() else char) },
             )
         }
         if (row.size == 9) {
@@ -311,26 +395,26 @@ private fun MagnifiedKeyboard(
     symbolState: Int,
     isArabic: Boolean,
     onCharSelected: (Char) -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
 ) {
     val neighbors = getNeighbors(centerChar, symbolState, isArabic)
     val chars = neighbors.flatten().filterNotNull().filter { it != ' ' }
-    
+
     val numRows = when (chars.size) {
         in 1..3 -> 1
         4 -> 2
         in 5..6 -> 2
         else -> 3
     }
-    
+
     val itemsPerRow = kotlin.math.ceil(chars.size.toFloat() / numRows).toInt()
     val chunked = chars.chunked(if (itemsPerRow > 0) itemsPerRow else 1)
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(4.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         val currentOnCancel by rememberUpdatedState(onCancel)
         // Top instruction / cancel bar
@@ -347,7 +431,7 @@ private fun MagnifiedKeyboard(
                     }
                 },
             horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(Icons.Default.ArrowDownward, contentDescription = "Tap to Cancel")
             Spacer(modifier = Modifier.width(8.dp))
@@ -360,14 +444,19 @@ private fun MagnifiedKeyboard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 rowChars.forEach { char ->
                     KeyButton(
                         text = char.toString(),
-                        modifier = Modifier.weight(1f).fillMaxHeight(),
-                        textStyle = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold, fontSize = 48.sp),
-                        onClick = { onCharSelected(char) }
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        textStyle = MaterialTheme.typography.displayMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 48.sp,
+                        ),
+                        onClick = { onCharSelected(char) },
                     )
                 }
             }
@@ -381,7 +470,7 @@ private fun ColumnScope.KeyboardTopBar(
     canUndo: Boolean,
     onDeleteWord: () -> Unit,
     onClearAll: () -> Unit,
-    onUndo: () -> Unit
+    onUndo: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -389,19 +478,22 @@ private fun ColumnScope.KeyboardTopBar(
             .weight(1f)
             .padding(bottom = 3.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         // Delete Word Button
         ActionKey(
             modifier = Modifier.weight(2.2f),
             backgroundColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurface,
-            onClick = onDeleteWord
+            onClick = onDeleteWord,
         ) {
             Text(
                 text = if (isArabic) "حذف كلمة" else "Delete Word",
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, fontSize = 13.sp),
-                color = MaterialTheme.colorScheme.onSurface
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                ),
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
 
@@ -410,28 +502,32 @@ private fun ColumnScope.KeyboardTopBar(
             modifier = Modifier.weight(2.2f),
             backgroundColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.85f),
             contentColor = MaterialTheme.colorScheme.onErrorContainer,
-            onClick = onClearAll
+            onClick = onClearAll,
         ) {
             Text(
                 text = if (isArabic) "مسح الكل" else "Clear All",
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, fontSize = 13.sp),
-                color = MaterialTheme.colorScheme.onErrorContainer
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                ),
+                color = MaterialTheme.colorScheme.onErrorContainer,
             )
         }
 
         // Undo Icon Button
         ActionKey(
             modifier = Modifier.weight(1.2f),
-            backgroundColor = if (canUndo) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
-            contentColor = if (canUndo) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-            onClick = {
-                if (canUndo) onUndo()
-            }
+            backgroundColor = if (canUndo) MaterialTheme.colorScheme.primaryContainer
+            else MaterialTheme.colorScheme.surface.copy(alpha = 0.4f),
+            contentColor = if (canUndo) MaterialTheme.colorScheme.onPrimaryContainer
+            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+            onClick = { if (canUndo) onUndo() },
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.Undo,
                 contentDescription = if (isArabic) "تراجع" else "Undo",
-                tint = if (canUndo) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                tint = if (canUndo) MaterialTheme.colorScheme.onPrimaryContainer
+                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
             )
         }
     }
@@ -443,7 +539,7 @@ private fun ActionKey(
     backgroundColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surface,
     contentColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface,
     onClick: () -> Unit,
-    content: @Composable BoxScope.() -> Unit
+    content: @Composable BoxScope.() -> Unit,
 ) {
     val currentOnClick by rememberUpdatedState(onClick)
     Box(
@@ -459,7 +555,7 @@ private fun ActionKey(
                 }
             },
         contentAlignment = Alignment.Center,
-        content = content
+        content = content,
     )
 }
 
@@ -468,7 +564,7 @@ private fun KeyButton(
     text: String,
     modifier: Modifier = Modifier,
     textStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.titleLarge,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val currentOnClick by rememberUpdatedState(onClick)
     Box(
@@ -482,12 +578,12 @@ private fun KeyButton(
                     currentOnClick()
                 }
             },
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = text,
             style = textStyle,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -499,22 +595,22 @@ private fun getNeighbors(center: Char, symbolState: Int, isArabic: Boolean): Lis
         "zxcvbnm",
         ",     .",
         "1234567890",
-        "@#£_&-+()\"",
-        "*\"':;!?~`|",
+        "@#£_&-+()\u0022",
+        "*\u0022':;!?~`|",
         ",        .",
         "~`|•√π÷×¶∆",
-        "£¢€¥^°={}\\",
+        "£¢€¥^°={}\u0022",
         "%©®™✓[]<> ",
         ",        .",
         "ضصثقفغعهخحجد",
         "شسيبلاتنمكط",
         "ذئءؤرىةوزظ",
-        ",        ."
+        ",        .",
     )
-    
+
     val lowerCenter = center.lowercaseChar()
     val isUpper = center.isUpperCase()
-    
+
     // Restrict search to the active symbol group
     val startRow = when {
         symbolState == 1 -> 4
@@ -523,7 +619,7 @@ private fun getNeighbors(center: Char, symbolState: Int, isArabic: Boolean): Lis
         else -> 0
     }
     val endRow = startRow + 3
-    
+
     var r = -1
     var c = -1
     for (i in startRow..endRow) {
@@ -534,7 +630,7 @@ private fun getNeighbors(center: Char, symbolState: Int, isArabic: Boolean): Lis
             break
         }
     }
-    
+
     if (r == -1) {
         val grid = MutableList(3) { MutableList<Char?>(3) { null } }
         grid[1][1] = center
@@ -546,10 +642,8 @@ private fun getNeighbors(center: Char, symbolState: Int, isArabic: Boolean): Lis
         val rowList = mutableListOf<Char?>()
         for (j in c - 1..c + 1) {
             if (i in layout.indices && j in layout[i].indices) {
-                // Prevent crossing between letters, symbols1, symbols2
                 val currentGroup = r / 4
                 val neighborGroup = i / 4
-                
                 if (currentGroup != neighborGroup) {
                     rowList.add(null)
                 } else {
