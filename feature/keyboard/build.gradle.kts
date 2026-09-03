@@ -31,4 +31,7 @@ dependencies {
     // Coroutines + ViewModel
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+
+    // Unit tests (pure JVM — no Android device/emulator required)
+    testImplementation("junit:junit:4.13.2")
 }
