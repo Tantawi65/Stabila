@@ -22,7 +22,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -74,6 +76,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.stabila.core.ui.LocalAdaptiveParams
 import androidx.compose.ui.draw.shadow
+
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.ui.draw.scale
+
 
 import androidx.compose.ui.res.stringResource
 import com.stabila.core.R
@@ -160,228 +167,170 @@ private fun IdleContent(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp),
+            .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(Modifier.height(56.dp))
+
+        // Hero Header
+        Text(
+            text = "Daily Assessment",
+            fontSize = 36.sp,
+            fontFamily = FontFamily.Serif,
+            fontWeight = FontWeight.Bold,
+            color = TextDark,
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(8.dp))
+        Text(
+            text = "Choose how you'd like to measure your steadiness today.",
+            fontSize = 16.sp,
+            color = TextGray,
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        Spacer(Modifier.height(48.dp))
 
-        // Hero Card (Like ScoreRingCard)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(elevation = 8.dp, shape = RoundedCornerShape(24.dp), spotColor = ShadowColor.copy(alpha = 0.12f), ambientColor = ShadowColor.copy(alpha = 0.12f))
-                .clip(RoundedCornerShape(24.dp))
-                .background(CardWhite)
-                .border(1.dp, TextDark.copy(alpha = 0.06f), RoundedCornerShape(24.dp))
-                .padding(24.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape)
-                        .background(BgCream),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MonitorHeart,
-                        contentDescription = null,
-                        tint = NavyPrimary,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-                Spacer(Modifier.height(16.dp))
-                Text(
-                    text = stringResource(R.string.test_title),
-                    fontSize = 28.sp,
-                    fontFamily = FontFamily.Serif,
-                    fontWeight = FontWeight.Medium,
-                    color = TextDark
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "Track your steadiness over time.",
-                    fontSize = 16.sp,
-                    color = TextGray
-                )
-            }
-        }
+        // Advanced Animated Test Cards
+        AdvancedTestCard(
+            title = stringResource(R.string.test_type_action),
+            subtitle = stringResource(R.string.test_action_desc),
+            icon = Icons.Default.TouchApp,
+            selected = selectedType == TestType.ACTION,
+            onClick = { selectedType = TestType.ACTION }
+        )
+        
+        Spacer(Modifier.height(16.dp))
+        
+        AdvancedTestCard(
+            title = stringResource(R.string.test_type_spiral),
+            subtitle = stringResource(R.string.test_spiral_desc),
+            icon = Icons.Default.Edit,
+            selected = selectedType == TestType.SPIRAL,
+            onClick = { selectedType = TestType.SPIRAL }
+        )
+        
+        Spacer(Modifier.height(48.dp))
+        
+        // Medication Section
+        Text(
+            text = "Medication Status",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = TextDark,
+            modifier = Modifier.fillMaxWidth().padding(start = 8.dp)
+        )
+        Spacer(Modifier.height(12.dp))
+        AnimatedMedicationSelector(selectedTag = medicationTag, onSelect = onLogMedication)
 
-        // Test Type Selection (Like GridTiles)
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(
-                text = "Select Test Type",
-                fontSize = 18.sp,
-                fontFamily = FontFamily.Serif,
-                fontWeight = FontWeight.Medium,
-                color = TextDark,
-                modifier = Modifier.padding(start = 4.dp)
-            )
-
-            if (adaptive.isHighTremorMode) {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    TestTypeTile(
-                        title = stringResource(R.string.test_type_action),
-                        description = stringResource(R.string.test_action_desc),
-                        icon = Icons.Default.TouchApp,
-                        selected = selectedType == TestType.ACTION,
-                        onClick = { selectedType = TestType.ACTION },
-                        modifier = Modifier.fillMaxWidth().height(130.dp)
-                    )
-                    TestTypeTile(
-                        title = stringResource(R.string.test_type_spiral),
-                        description = stringResource(R.string.test_spiral_desc),
-                        icon = Icons.Default.Edit,
-                        selected = selectedType == TestType.SPIRAL,
-                        onClick = { selectedType = TestType.SPIRAL },
-                        modifier = Modifier.fillMaxWidth().height(130.dp)
-                    )
-                }
-            } else {
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    TestTypeTile(
-                        title = stringResource(R.string.test_type_action),
-                        description = "Hold phone steady",
-                        icon = Icons.Default.TouchApp,
-                        selected = selectedType == TestType.ACTION,
-                        onClick = { selectedType = TestType.ACTION },
-                        modifier = Modifier.weight(1f).height(130.dp)
-                    )
-                    TestTypeTile(
-                        title = stringResource(R.string.test_type_spiral),
-                        description = "Trace a spiral",
-                        icon = Icons.Default.Edit,
-                        selected = selectedType == TestType.SPIRAL,
-                        onClick = { selectedType = TestType.SPIRAL },
-                        modifier = Modifier.weight(1f).height(130.dp)
-                    )
-                }
-            }
-        }
-
-        // Medication Selection
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(
-                text = "Medication Status",
-                fontSize = 18.sp,
-                fontFamily = FontFamily.Serif,
-                fontWeight = FontWeight.Medium,
-                color = TextDark,
-                modifier = Modifier.padding(start = 4.dp)
-            )
-            
-            if (adaptive.isHighTremorMode) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    MedicationTile(label = "None", selected = medicationTag == null, onClick = { onLogMedication(null) }, modifier = Modifier.fillMaxWidth().height(80.dp))
-                    MedicationTile(label = "Pre-dose", selected = medicationTag == "pre-dose", onClick = { onLogMedication("pre-dose") }, modifier = Modifier.fillMaxWidth().height(80.dp))
-                    MedicationTile(label = "Post-dose", selected = medicationTag == "post-dose", onClick = { onLogMedication("post-dose") }, modifier = Modifier.fillMaxWidth().height(80.dp))
-                }
-            } else {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    MedicationTile(label = "None", selected = medicationTag == null, onClick = { onLogMedication(null) }, modifier = Modifier.weight(1f).height(64.dp))
-                    MedicationTile(label = "Pre-dose", selected = medicationTag == "pre-dose", onClick = { onLogMedication("pre-dose") }, modifier = Modifier.weight(1f).height(64.dp))
-                    MedicationTile(label = "Post-dose", selected = medicationTag == "post-dose", onClick = { onLogMedication("post-dose") }, modifier = Modifier.weight(1f).height(64.dp))
-                }
-            }
-        }
-
-        Spacer(Modifier.weight(1f, fill = false))
+        Spacer(Modifier.height(48.dp))
         
         StabilaPrimaryButton(
             text = stringResource(R.string.test_start_button),
             onClick = { onStart(selectedType) },
-            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+            modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)
         )
     }
 }
 
 @Composable
-private fun TestTypeTile(
+fun AdvancedTestCard(
     title: String,
-    description: String,
+    subtitle: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onClick: () -> Unit
 ) {
-    val bgColor = if (selected) NavyPrimary else CardWhite
-    val contentColor = if (selected) CardWhite else TextDark
-    val descColor = if (selected) CardWhite.copy(alpha = 0.8f) else TextGray
-
+    val scale by animateFloatAsState(if (selected) 1.02f else 1f)
+    val elevation by animateDpAsState(if (selected) 16.dp else 2.dp)
+    val borderColor by animateColorAsState(if (selected) NavyPrimary else Color.Transparent)
+    val bgColor by animateColorAsState(if (selected) CardWhite else CardWhite.copy(alpha = 0.6f))
+    val adaptive = LocalAdaptiveParams.current
+    
+    // Base height grows slightly if high tremor, but text stays normal.
+    val cardMinHeight = if (adaptive.isHighTremorMode) 140.dp else 100.dp
+    
     Box(
-        modifier = modifier
-            .shadow(elevation = if (selected) 12.dp else 4.dp, shape = RoundedCornerShape(20.dp), spotColor = ShadowColor.copy(alpha = 0.12f), ambientColor = ShadowColor.copy(alpha = 0.12f))
-            .clip(RoundedCornerShape(20.dp))
+        modifier = Modifier
+            .fillMaxWidth()
+            .scale(scale)
+            .shadow(elevation, RoundedCornerShape(24.dp), spotColor = ShadowColor.copy(alpha = 0.15f))
+            .clip(RoundedCornerShape(24.dp))
             .background(bgColor)
-            .border(
-                width = if (selected) 0.dp else 1.dp,
-                color = if (selected) Color.Transparent else TextDark.copy(alpha = 0.06f),
-                shape = RoundedCornerShape(20.dp)
-            )
+            .border(2.dp, borderColor, RoundedCornerShape(24.dp))
             .clickable(onClick = onClick)
-            .padding(16.dp)
+            .padding(24.dp)
     ) {
-        Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = contentColor,
-                modifier = Modifier.size(28.dp)
-            )
-            Column {
-                Text(
-                    text = title,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = contentColor
-                )
-                Text(
-                    text = description,
-                    fontSize = 12.sp,
-                    color = descColor,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.heightIn(min = cardMinHeight - 48.dp) // minus padding
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(if (selected) NavyPrimary else BgCream),
+                contentAlignment = Alignment.Center
+            ) {
+                 Icon(icon, contentDescription = null, tint = if (selected) CardWhite else NavyPrimary)
+            }
+            Spacer(Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                 Text(title, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                 Spacer(Modifier.height(4.dp))
+                 Text(subtitle, fontSize = 14.sp, color = TextGray, lineHeight = 18.sp)
+            }
+            if (selected) {
+                 Spacer(Modifier.width(8.dp))
+                 Icon(Icons.Default.CheckCircle, contentDescription = null, tint = NavyPrimary, modifier = Modifier.size(28.dp))
             }
         }
     }
 }
 
 @Composable
-private fun MedicationTile(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val bgColor = if (selected) NavyPrimary else CardWhite
-    val contentColor = if (selected) CardWhite else TextDark
+fun AnimatedMedicationSelector(selectedTag: String?, onSelect: (String?) -> Unit) {
+    val adaptive = LocalAdaptiveParams.current
+    val selectorHeight = if (adaptive.isHighTremorMode) 72.dp else 56.dp
 
     Box(
-        modifier = modifier
-            .shadow(elevation = if (selected) 8.dp else 2.dp, shape = RoundedCornerShape(16.dp), spotColor = ShadowColor.copy(alpha = 0.08f), ambientColor = ShadowColor.copy(alpha = 0.08f))
-            .clip(RoundedCornerShape(16.dp))
-            .background(bgColor)
-            .border(
-                width = if (selected) 0.dp else 1.dp,
-                color = if (selected) Color.Transparent else TextDark.copy(alpha = 0.06f),
-                shape = RoundedCornerShape(16.dp)
-            )
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(selectorHeight)
+            .background(TextDark.copy(alpha = 0.05f), RoundedCornerShape(100.dp))
+            .padding(6.dp)
     ) {
-        Text(
-            text = label,
-            fontSize = 14.sp,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-            color = contentColor,
-            textAlign = TextAlign.Center
-        )
+        Row(modifier = Modifier.fillMaxSize()) {
+            listOf(
+                null to "None", 
+                "pre-dose" to "Pre-dose", 
+                "post-dose" to "Post-dose"
+            ).forEach { (tag, label) ->
+                val isSelected = selectedTag == tag
+                val bgColor by animateColorAsState(if (isSelected) CardWhite else Color.Transparent)
+                val elevation by animateDpAsState(if (isSelected) 4.dp else 0.dp)
+                
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .shadow(elevation, RoundedCornerShape(100.dp), spotColor = ShadowColor.copy(alpha = 0.1f))
+                        .clip(RoundedCornerShape(100.dp))
+                        .background(bgColor)
+                        .clickable { onSelect(tag) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = label, 
+                        color = if (isSelected) TextDark else TextGray, 
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        fontSize = 15.sp
+                    )
+                }
+            }
+        }
     }
 }
-
 // ─── COUNTDOWN ───────────────────────────────────────────────────────────────
 
 @Composable
