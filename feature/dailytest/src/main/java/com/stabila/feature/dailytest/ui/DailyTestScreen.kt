@@ -32,6 +32,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.MonitorHeart
+import androidx.compose.ui.text.style.TextOverflow
+
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -140,160 +147,237 @@ fun DailyTestScreen(
 
 // ─── IDLE ────────────────────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun IdleContent(
     medicationTag: String?,
     onStart: (TestType) -> Unit,
     onLogMedication: (String?) -> Unit
 ) {
-    val context = LocalContext.current
     val adaptive = LocalAdaptiveParams.current
     var selectedType by remember { mutableStateOf(TestType.ACTION) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Pulsing icon placeholder
+        Spacer(Modifier.height(8.dp))
+
+        // Hero Card (Like ScoreRingCard)
         Box(
             modifier = Modifier
-                .size(96.dp)
-                .shadow(elevation = 8.dp, shape = CircleShape, spotColor = ShadowColor.copy(alpha = 0.12f), ambientColor = ShadowColor.copy(alpha = 0.12f))
-                .clip(CircleShape)
+                .fillMaxWidth()
+                .shadow(elevation = 8.dp, shape = RoundedCornerShape(24.dp), spotColor = ShadowColor.copy(alpha = 0.12f), ambientColor = ShadowColor.copy(alpha = 0.12f))
+                .clip(RoundedCornerShape(24.dp))
                 .background(CardWhite)
-                .border(1.dp, TextDark.copy(alpha = 0.06f), CircleShape),
+                .border(1.dp, TextDark.copy(alpha = 0.06f), RoundedCornerShape(24.dp))
+                .padding(24.dp),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = stringResource(R.string.test_title),
-                tint = NavyPrimary,
-                modifier = Modifier.size(48.dp)
-            )
-        }
-        Spacer(Modifier.height(32.dp))
-        Text(
-            text = stringResource(R.string.test_title),
-            style = MaterialTheme.typography.headlineMedium,
-            color = TextDark,
-            textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold,
-            fontFamily = FontFamily.Serif
-        )
-        Spacer(Modifier.height(24.dp))
-        
-        // Test Type Selector
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(adaptive.buttonHeight)
-                .shadow(elevation = 4.dp, shape = RoundedCornerShape(100.dp), spotColor = ShadowColor.copy(alpha = 0.08f), ambientColor = ShadowColor.copy(alpha = 0.08f))
-                .clip(RoundedCornerShape(100.dp))
-                .background(CardWhite)
-                .border(1.dp, TextDark.copy(alpha = 0.06f), RoundedCornerShape(100.dp)),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(100.dp))
-                    .background(if (selectedType == TestType.ACTION) NavyPrimary else Color.Transparent)
-                    .clickable { selectedType = TestType.ACTION },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = stringResource(R.string.test_type_action), 
-                    color = if (selectedType == TestType.ACTION) CardWhite else TextDark, 
-                    fontWeight = FontWeight.SemiBold, 
-                    fontSize = 14.sp
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(100.dp))
-                    .background(if (selectedType == TestType.SPIRAL) NavyPrimary else Color.Transparent)
-                    .clickable { selectedType = TestType.SPIRAL },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = stringResource(R.string.test_type_spiral), 
-                    color = if (selectedType == TestType.SPIRAL) CardWhite else TextDark, 
-                    fontWeight = FontWeight.SemiBold, 
-                    fontSize = 14.sp
-                )
-            }
-        }
-        
-        Spacer(Modifier.height(16.dp))
-        Text(
-            text = when (selectedType) {
-                TestType.ACTION -> stringResource(R.string.test_action_desc)
-                TestType.SPIRAL -> stringResource(R.string.test_spiral_desc)
-            },
-            style = MaterialTheme.typography.bodyLarge,
-            color = TextGray,
-            textAlign = TextAlign.Center,
-            lineHeight = 24.sp
-        )
-        Spacer(Modifier.height(32.dp))
-        
-        // Medication Toggle
-        Text(
-            text = stringResource(R.string.test_medication_title),
-            style = MaterialTheme.typography.labelMedium,
-            color = TextGray
-        )
-        Spacer(Modifier.height(8.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(adaptive.buttonHeight)
-                .shadow(elevation = 4.dp, shape = RoundedCornerShape(100.dp), spotColor = ShadowColor.copy(alpha = 0.08f), ambientColor = ShadowColor.copy(alpha = 0.08f))
-                .clip(RoundedCornerShape(100.dp))
-                .background(CardWhite)
-                .border(1.dp, TextDark.copy(alpha = 0.06f), RoundedCornerShape(100.dp)),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            listOf(
-                null to stringResource(R.string.test_medication_none),
-                "pre-dose" to stringResource(R.string.test_medication_pre),
-                "post-dose" to stringResource(R.string.test_medication_post)
-            ).forEach { (tag, label) ->
-                val isSelected = medicationTag == tag
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(100.dp))
-                        .background(if (isSelected) NavyPrimary else Color.Transparent)
-                        .clickable { onLogMedication(tag) },
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .background(BgCream),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = label, 
-                        color = if (isSelected) CardWhite else TextGray, 
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium, 
-                        fontSize = 13.sp
+                    Icon(
+                        imageVector = Icons.Default.MonitorHeart,
+                        contentDescription = null,
+                        tint = NavyPrimary,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.test_title),
+                    fontSize = 28.sp,
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.Medium,
+                    color = TextDark
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "Track your steadiness over time.",
+                    fontSize = 16.sp,
+                    color = TextGray
+                )
+            }
+        }
+
+        // Test Type Selection (Like GridTiles)
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                text = "Select Test Type",
+                fontSize = 18.sp,
+                fontFamily = FontFamily.Serif,
+                fontWeight = FontWeight.Medium,
+                color = TextDark,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+
+            if (adaptive.isHighTremorMode) {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    TestTypeTile(
+                        title = stringResource(R.string.test_type_action),
+                        description = stringResource(R.string.test_action_desc),
+                        icon = Icons.Default.TouchApp,
+                        selected = selectedType == TestType.ACTION,
+                        onClick = { selectedType = TestType.ACTION },
+                        modifier = Modifier.fillMaxWidth().height(130.dp)
+                    )
+                    TestTypeTile(
+                        title = stringResource(R.string.test_type_spiral),
+                        description = stringResource(R.string.test_spiral_desc),
+                        icon = Icons.Default.Edit,
+                        selected = selectedType == TestType.SPIRAL,
+                        onClick = { selectedType = TestType.SPIRAL },
+                        modifier = Modifier.fillMaxWidth().height(130.dp)
+                    )
+                }
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    TestTypeTile(
+                        title = stringResource(R.string.test_type_action),
+                        description = "Hold phone steady",
+                        icon = Icons.Default.TouchApp,
+                        selected = selectedType == TestType.ACTION,
+                        onClick = { selectedType = TestType.ACTION },
+                        modifier = Modifier.weight(1f).height(130.dp)
+                    )
+                    TestTypeTile(
+                        title = stringResource(R.string.test_type_spiral),
+                        description = "Trace a spiral",
+                        icon = Icons.Default.Edit,
+                        selected = selectedType == TestType.SPIRAL,
+                        onClick = { selectedType = TestType.SPIRAL },
+                        modifier = Modifier.weight(1f).height(130.dp)
                     )
                 }
             }
         }
+
+        // Medication Selection
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                text = "Medication Status",
+                fontSize = 18.sp,
+                fontFamily = FontFamily.Serif,
+                fontWeight = FontWeight.Medium,
+                color = TextDark,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+            
+            if (adaptive.isHighTremorMode) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    MedicationTile(label = "None", selected = medicationTag == null, onClick = { onLogMedication(null) }, modifier = Modifier.fillMaxWidth().height(80.dp))
+                    MedicationTile(label = "Pre-dose", selected = medicationTag == "pre-dose", onClick = { onLogMedication("pre-dose") }, modifier = Modifier.fillMaxWidth().height(80.dp))
+                    MedicationTile(label = "Post-dose", selected = medicationTag == "post-dose", onClick = { onLogMedication("post-dose") }, modifier = Modifier.fillMaxWidth().height(80.dp))
+                }
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    MedicationTile(label = "None", selected = medicationTag == null, onClick = { onLogMedication(null) }, modifier = Modifier.weight(1f).height(64.dp))
+                    MedicationTile(label = "Pre-dose", selected = medicationTag == "pre-dose", onClick = { onLogMedication("pre-dose") }, modifier = Modifier.weight(1f).height(64.dp))
+                    MedicationTile(label = "Post-dose", selected = medicationTag == "post-dose", onClick = { onLogMedication("post-dose") }, modifier = Modifier.weight(1f).height(64.dp))
+                }
+            }
+        }
+
+        Spacer(Modifier.weight(1f, fill = false))
         
-        Spacer(Modifier.height(32.dp))
         StabilaPrimaryButton(
             text = stringResource(R.string.test_start_button),
             onClick = { onStart(selectedType) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+        )
+    }
+}
+
+@Composable
+private fun TestTypeTile(
+    title: String,
+    description: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val bgColor = if (selected) NavyPrimary else CardWhite
+    val contentColor = if (selected) CardWhite else TextDark
+    val descColor = if (selected) CardWhite.copy(alpha = 0.8f) else TextGray
+
+    Box(
+        modifier = modifier
+            .shadow(elevation = if (selected) 12.dp else 4.dp, shape = RoundedCornerShape(20.dp), spotColor = ShadowColor.copy(alpha = 0.12f), ambientColor = ShadowColor.copy(alpha = 0.12f))
+            .clip(RoundedCornerShape(20.dp))
+            .background(bgColor)
+            .border(
+                width = if (selected) 0.dp else 1.dp,
+                color = if (selected) Color.Transparent else TextDark.copy(alpha = 0.06f),
+                shape = RoundedCornerShape(20.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(16.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(28.dp)
+            )
+            Column {
+                Text(
+                    text = title,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = contentColor
+                )
+                Text(
+                    text = description,
+                    fontSize = 12.sp,
+                    color = descColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MedicationTile(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val bgColor = if (selected) NavyPrimary else CardWhite
+    val contentColor = if (selected) CardWhite else TextDark
+
+    Box(
+        modifier = modifier
+            .shadow(elevation = if (selected) 8.dp else 2.dp, shape = RoundedCornerShape(16.dp), spotColor = ShadowColor.copy(alpha = 0.08f), ambientColor = ShadowColor.copy(alpha = 0.08f))
+            .clip(RoundedCornerShape(16.dp))
+            .background(bgColor)
+            .border(
+                width = if (selected) 0.dp else 1.dp,
+                color = if (selected) Color.Transparent else TextDark.copy(alpha = 0.06f),
+                shape = RoundedCornerShape(16.dp)
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            fontSize = 14.sp,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            color = contentColor,
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -703,4 +787,5 @@ private fun SpiralCanvasContent(
         Spacer(Modifier.height(16.dp))
     }
 }
+
 
