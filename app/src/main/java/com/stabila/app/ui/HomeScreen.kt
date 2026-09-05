@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,12 +24,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.Keyboard
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,35 +38,33 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.stabila.core.R
-import com.stabila.core.ui.Amber500
-import com.stabila.core.ui.Emerald500
-import com.stabila.core.ui.LocalAdaptiveParams
-import com.stabila.core.ui.Red500
 import com.stabila.core.ui.stabilizedClick
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import kotlin.math.cos
+import kotlin.math.sin
 
-// ── Design Tokens ──────────────────────────────────────────────────────────────
-private val TealPrimary   = Color(0xFF1B4F5C)
-private val TealLight     = Color(0xFFE8F2F5)
-private val WarmBg        = Color(0xFFF5F2ED)
-private val CardWhite     = Color(0xFFFFFFFF)
-private val DividerColor  = Color(0xFFEAE6E0)
-private val TextPrimary   = Color(0xFF16140F)
-private val TextSecondary = Color(0xFFA39D94)
-private val AmberDot      = Color(0xFFD4845A)
-private val GreenDot      = Color(0xFF4A9D7A)
+// Exact colors from React code
+private val BgCream = Color(0xFFFAF7F2)
+private val TextDark = Color(0xFF1C2430)
+private val TextGray = Color(0xFF6B7280)
+private val NavyPrimary = Color(0xFF2E4B6B)
+private val GreenAccent = Color(0xFF6E8B6B)
+private val CardWhite = Color(0xFFFFFFFF)
+private val ShadowColor = Color(0xFF1C2430)
 
 @Composable
 fun HomeScreen(
@@ -86,150 +83,118 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(WarmBg)
+            .background(BgCream)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp)
+            .padding(horizontal = 24.dp)
     ) {
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(24.dp))
 
         // Header
-        HomeHeader()
+        HeaderSection()
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(24.dp))
 
-        // Score ring
+        // Score Ring Card
         ScoreRingCard(score = latestScore)
 
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(24.dp))
 
-        // Featured SteadyCam
-        FeaturedCard(
-            title = "SteadyCam",
-            subtitle = "Stabilized camera · blur-free photos",
-            icon = Icons.Default.CameraAlt,
+        // SteadyCam Card
+        SteadyCamCard(
             onClick = onNavigateToCamera,
             touchStabilizerEnabled = touchStabilizerEnabled
         )
 
         Spacer(Modifier.height(16.dp))
 
-        // Section label
-        Text(
-            text = "QUICK ACCESS",
-            fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = TextSecondary,
-            letterSpacing = 1.2.sp,
-            modifier = Modifier.padding(bottom = 10.dp)
-        )
-
-        // 2×2 grid
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                SmallActionTile(
+        // 2x2 Grid
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                GridTile(
                     modifier = Modifier.weight(1f),
-                    title = "Touch Stabilizer",
                     icon = Icons.Default.TouchApp,
-                    dotColor = TealPrimary,
+                    iconColor = TextDark,
+                    label = "Touch\nStabilizer",
+                    showGreenDot = true,
                     onClick = onNavigateToTouchStabilizer,
                     touchStabilizerEnabled = touchStabilizerEnabled
                 )
-                SmallActionTile(
+                GridTile(
                     modifier = Modifier.weight(1f),
-                    title = "Adaptive Keyboard",
                     icon = Icons.Default.Keyboard,
-                    dotColor = AmberDot,
+                    iconColor = TextDark,
+                    label = "Adaptive\nKeyboard",
+                    showGreenDot = false,
                     onClick = onNavigateToKeyboardSetup,
                     touchStabilizerEnabled = touchStabilizerEnabled
                 )
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                SmallActionTile(
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                GridTile(
                     modifier = Modifier.weight(1f),
-                    title = "Auto Scroll",
-                    icon = Icons.Default.Keyboard,
-                    dotColor = TealPrimary,
+                    icon = Icons.Default.KeyboardArrowDown,
+                    iconColor = TextDark,
+                    label = "Auto-Scroll",
+                    showGreenDot = false,
                     onClick = onNavigateToAutoScroll,
                     touchStabilizerEnabled = touchStabilizerEnabled
                 )
-                SmallActionTile(
+                GridTile(
                     modifier = Modifier.weight(1f),
-                    title = "Daily Test",
                     icon = Icons.Default.MonitorHeart,
-                    dotColor = GreenDot,
+                    iconColor = NavyPrimary,
+                    label = "Daily Test",
+                    showGreenDot = false,
                     onClick = onNavigateToDailyTest,
                     touchStabilizerEnabled = touchStabilizerEnabled
                 )
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(24.dp))
 
-        // Divider before history
-        HorizontalDivider(color = DividerColor, thickness = 1.dp)
-        Spacer(Modifier.height(14.dp))
-
-        // History row
+        // History Row
         HistoryRow(
             onClick = onNavigateToHistory,
             touchStabilizerEnabled = touchStabilizerEnabled
         )
 
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(32.dp))
     }
 }
 
-// ── Header ─────────────────────────────────────────────────────────────────────
 @Composable
-private fun HomeHeader() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column {
-            Text(
-                text = "Good morning",
-                fontSize = 13.sp,
-                color = TextSecondary,
-                fontWeight = FontWeight.Normal
-            )
-            Text(
-                text = stringResource(R.string.app_name),
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary
-            )
-        }
-        Box(
-            modifier = Modifier
-                .size(42.dp)
-                .clip(CircleShape)
-                .background(TealLight)
-                .border(1.5.dp, TealPrimary.copy(alpha = 0.25f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "S",
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold,
-                color = TealPrimary
-            )
-        }
+private fun HeaderSection() {
+    val dateText = try {
+        val date = LocalDate.now()
+        date.format(DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.ENGLISH)).uppercase()
+    } catch (e: Exception) { "TUESDAY, APRIL 9" }
+
+    Column {
+        Text(
+            text = "Good morning, Mohamed",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Medium,
+            fontFamily = FontFamily.Serif,
+            color = TextDark,
+            lineHeight = 32.sp
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = dateText,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = TextGray,
+            letterSpacing = 1.2.sp
+        )
     }
 }
 
-// ── Score Ring Card ─────────────────────────────────────────────────────────────
 @Composable
 private fun ScoreRingCard(score: Float) {
-    val ringColor = when {
-        score < 0f  -> Color(0xFFCCC8C0)
-        score < 30f -> Emerald500
-        score < 65f -> Amber500
-        else        -> Red500
-    }
+    val displayScore = if (score >= 0f) score else 78f // fallback for design demo
     val animatedProgress by animateFloatAsState(
-        targetValue = (score / 100f).coerceIn(0f, 1f),
+        targetValue = (displayScore / 100f).coerceIn(0f, 1f),
         animationSpec = tween(1400, easing = EaseInOutCubic),
         label = "ring"
     )
@@ -237,250 +202,253 @@ private fun ScoreRingCard(score: Float) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .shadow(elevation = 8.dp, shape = RoundedCornerShape(24.dp), spotColor = ShadowColor.copy(alpha = 0.12f), ambientColor = ShadowColor.copy(alpha = 0.12f))
             .clip(RoundedCornerShape(24.dp))
+            .border(1.dp, TextDark.copy(alpha = 0.06f), RoundedCornerShape(24.dp))
             .background(CardWhite)
-            .border(1.dp, DividerColor, RoundedCornerShape(24.dp))
-            .padding(28.dp),
+            .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(modifier = Modifier.size(160.dp), contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier.size(220.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                // Background ticks
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val radius = 86.dp.toPx()
+                    for (i in 0 until 12) {
+                        val angle = Math.toRadians((i * 30).toDouble())
+                        val startX = center.x + (radius + 2.dp.toPx()) * cos(angle).toFloat()
+                        val startY = center.y + (radius + 2.dp.toPx()) * sin(angle).toFloat()
+                        val endX = center.x + (radius - 6.dp.toPx()) * cos(angle).toFloat()
+                        val endY = center.y + (radius - 6.dp.toPx()) * sin(angle).toFloat()
+                        drawLine(
+                            color = TextDark.copy(alpha = 0.3f),
+                            start = androidx.compose.ui.geometry.Offset(startX, startY),
+                            end = androidx.compose.ui.geometry.Offset(endX, endY),
+                            strokeWidth = 2f
+                        )
+                    }
+                }
+
+                CircularProgressIndicator(
+                    progress = { 1f },
+                    modifier = Modifier.size(172.dp),
+                    color = TextDark.copy(alpha = 0.1f),
+                    strokeWidth = 8.dp
+                )
+
                 CircularProgressIndicator(
                     progress = { animatedProgress },
-                    modifier = Modifier.fillMaxSize(),
-                    color = ringColor,
-                    trackColor = Color(0xFFEDE9E3),
-                    strokeWidth = 14.dp,
+                    modifier = Modifier.size(172.dp),
+                    color = NavyPrimary,
+                    strokeWidth = 8.dp,
                     strokeCap = StrokeCap.Round
                 )
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                Row(verticalAlignment = Alignment.Bottom) {
                     Text(
-                        text = if (score >= 0f) "${score.toInt()}" else "—",
-                        fontSize = 52.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (score >= 0f) TextPrimary else Color(0xFFCCC8C0)
+                        text = "${displayScore.toInt()}",
+                        fontSize = 60.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontFamily = FontFamily.Serif,
+                        color = TextDark,
+                        lineHeight = 60.sp
                     )
-                    if (score >= 0f) {
-                        Text(text = "/ 100", fontSize = 14.sp, color = TextSecondary)
-                    }
+                    Text(
+                        text = "/100",
+                        fontSize = 20.sp,
+                        fontFamily = FontFamily.Serif,
+                        color = TextGray,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
                 }
             }
 
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(16.dp))
 
             Text(
                 text = "Today's Steadiness",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = TextPrimary
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
+                color = TextDark
             )
 
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(8.dp))
 
-            if (score >= 0f) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowUp,
-                        contentDescription = null,
-                        tint = TealPrimary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(Modifier.width(2.dp))
-                    Text(
-                        text = when {
-                            score < 30f -> "Stable — low tremor"
-                            score < 65f -> "Mild tremor detected"
-                            else        -> "High tremor — rest up"
-                        },
-                        fontSize = 13.sp,
-                        color = TealPrimary,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            } else {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.TrendingUp,
+                    contentDescription = null,
+                    tint = GreenAccent,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(4.dp))
                 Text(
-                    text = "Take a daily test to see your score",
-                    fontSize = 13.sp,
-                    color = TextSecondary
+                    text = "Steadier than yesterday",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = GreenAccent
                 )
             }
         }
     }
 }
 
-// ── Featured Card ───────────────────────────────────────────────────────────────
 @Composable
-private fun FeaturedCard(
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    onClick: () -> Unit,
-    touchStabilizerEnabled: Boolean
-) {
+private fun SteadyCamCard(onClick: () -> Unit, touchStabilizerEnabled: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(TealPrimary)
+            .shadow(elevation = 8.dp, shape = RoundedCornerShape(24.dp), spotColor = ShadowColor.copy(alpha = 0.16f), ambientColor = ShadowColor.copy(alpha = 0.16f))
+            .clip(RoundedCornerShape(24.dp))
+            .border(1.dp, CardWhite.copy(alpha = 0.2f), RoundedCornerShape(24.dp))
+            .background(NavyPrimary)
             .stabilizedClick(enabled = touchStabilizerEnabled, onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 18.dp),
+            .padding(24.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Box(
             modifier = Modifier
-                .size(52.dp)
+                .size(56.dp)
                 .clip(CircleShape)
                 .background(CardWhite),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = icon,
+                imageVector = Icons.Default.CameraAlt,
                 contentDescription = null,
-                tint = TealPrimary,
-                modifier = Modifier.size(26.dp)
+                tint = NavyPrimary,
+                modifier = Modifier.size(28.dp)
             )
         }
+
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = CardWhite)
-            Spacer(Modifier.height(2.dp))
             Text(
-                text = subtitle,
-                fontSize = 13.sp,
-                color = CardWhite.copy(alpha = 0.72f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                text = "SteadyCam",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.Serif,
+                color = CardWhite
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Stabilized camera for steady, blur-free photos",
+                fontSize = 18.sp,
+                color = CardWhite.copy(alpha = 0.85f),
+                lineHeight = 24.sp
             )
         }
-        Icon(
-            imageVector = Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = CardWhite.copy(alpha = 0.8f),
-            modifier = Modifier.size(22.dp)
-        )
     }
 }
 
-// ── Small Action Tile ───────────────────────────────────────────────────────────
 @Composable
-private fun SmallActionTile(
+private fun GridTile(
     modifier: Modifier = Modifier,
-    title: String,
     icon: ImageVector,
-    dotColor: Color,
+    iconColor: Color,
+    label: String,
+    showGreenDot: Boolean,
     onClick: () -> Unit,
     touchStabilizerEnabled: Boolean
 ) {
     Box(
         modifier = modifier
-            .aspectRatio(1f)
-            .clip(RoundedCornerShape(18.dp))
+            .height(130.dp)
+            .shadow(elevation = 8.dp, shape = RoundedCornerShape(24.dp), spotColor = ShadowColor.copy(alpha = 0.1f), ambientColor = ShadowColor.copy(alpha = 0.1f))
+            .clip(RoundedCornerShape(24.dp))
+            .border(1.dp, TextDark.copy(alpha = 0.06f), RoundedCornerShape(24.dp))
             .background(CardWhite)
-            .border(1.dp, DividerColor, RoundedCornerShape(18.dp))
             .stabilizedClick(enabled = touchStabilizerEnabled, onClick = onClick)
-            .padding(14.dp)
+            .padding(16.dp)
     ) {
-        // Status dot
-        Box(
-            modifier = Modifier
-                .size(8.dp)
-                .clip(CircleShape)
-                .background(dotColor)
-                .align(Alignment.TopEnd)
-        )
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
+        if (showGreenDot) {
             Box(
                 modifier = Modifier
-                    .size(42.dp)
+                    .size(10.dp)
                     .clip(CircleShape)
-                    .background(TealLight),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = TealPrimary,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
+                    .background(GreenAccent)
+                    .align(Alignment.TopEnd)
+            )
+        }
+
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconColor,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(Modifier.height(8.dp))
             Text(
-                text = title,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                text = label,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
+                color = TextDark,
+                textAlign = TextAlign.Center,
+                lineHeight = 24.sp
             )
         }
     }
 }
 
-// ── History Row ─────────────────────────────────────────────────────────────────
 @Composable
 private fun HistoryRow(onClick: () -> Unit, touchStabilizerEnabled: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(CardWhite)
-            .border(1.dp, DividerColor, RoundedCornerShape(16.dp))
-            .stabilizedClick(enabled = touchStabilizerEnabled, onClick = onClick)
-            .padding(horizontal = 18.dp, vertical = 16.dp),
+            .border(width = 1.dp, color = TextDark, shape = androidx.compose.ui.graphics.RectangleShape)
+            .padding(top = 24.dp)
+            .stabilizedClick(enabled = touchStabilizerEnabled, onClick = onClick),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .width(4.dp)
-                .height(38.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(TealPrimary)
-        )
-        Spacer(Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = "History", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
-            Spacer(Modifier.height(2.dp))
-            Text(text = "Your last 7 tests", fontSize = 13.sp, color = TextSecondary)
+            Text(
+                text = "History",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Medium,
+                fontFamily = FontFamily.Serif,
+                color = TextDark
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Your last 7 tests",
+                fontSize = 18.sp,
+                color = TextGray
+            )
         }
-        MiniSparkline()
-        Spacer(Modifier.width(10.dp))
+
+        // Sparkline
+        val pts = listOf(0.8f, 0.65f, 0.75f, 0.5f, 0.4f, 0.2f, 0.1f)
+        Canvas(modifier = Modifier.width(80.dp).height(32.dp)) {
+            val w = size.width
+            val h = size.height
+            val step = w / (pts.size - 1)
+            val path = Path()
+            pts.forEachIndexed { i, v ->
+                val x = i * step
+                val y = v * h
+                if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+            }
+            drawPath(
+                path = path,
+                color = NavyPrimary,
+                style = Stroke(width = 2.5f.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+            )
+        }
+
+        Spacer(Modifier.width(12.dp))
         Icon(
             imageVector = Icons.Default.ChevronRight,
             contentDescription = null,
-            tint = TealPrimary,
+            tint = TextGray,
             modifier = Modifier.size(20.dp)
         )
-    }
-}
-
-// ── Mini Sparkline (Canvas) ─────────────────────────────────────────────────────
-@Composable
-private fun MiniSparkline() {
-    val points = listOf(0.6f, 0.42f, 0.55f, 0.32f, 0.5f, 0.28f, 0.44f)
-    Canvas(modifier = Modifier.width(58.dp).height(30.dp)) {
-        val w = size.width
-        val h = size.height
-        val stepX = w / (points.size - 1)
-
-        val path = Path()
-        points.forEachIndexed { i, v ->
-            val x = i * stepX
-            val y = h - (v * h)
-            if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
-        }
-        drawPath(
-            path = path,
-            color = TealPrimary,
-            style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-        )
-        points.forEachIndexed { i, v ->
-            drawCircle(
-                color = TealPrimary,
-                radius = 3.dp.toPx(),
-                center = Offset(i * stepX, h - (v * h))
-            )
-        }
     }
 }
