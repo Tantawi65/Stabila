@@ -166,22 +166,22 @@ private fun IdleContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.height(56.dp))
+        Spacer(Modifier.height(32.dp))
 
         // Hero Header
         Text(
-            text = "Daily Assessment",
+            text = "Daily\nAssessment",
             fontSize = 36.sp,
+            lineHeight = 44.sp,
             fontFamily = FontFamily.Serif,
             fontWeight = FontWeight.Bold,
             color = TextDark,
             modifier = Modifier.fillMaxWidth()
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(16.dp))
         Text(
             text = "Choose how you'd like to measure your steadiness today.",
             fontSize = 16.sp,
@@ -189,7 +189,7 @@ private fun IdleContent(
             modifier = Modifier.fillMaxWidth()
         )
         
-        Spacer(Modifier.height(48.dp))
+        Spacer(Modifier.weight(1f))
 
         // Advanced Animated Test Cards
         AdvancedTestCard(
@@ -210,7 +210,7 @@ private fun IdleContent(
             onClick = { selectedType = TestType.SPIRAL }
         )
         
-        Spacer(Modifier.height(48.dp))
+        Spacer(Modifier.weight(1f))
         
         // Medication Section
         Text(
@@ -223,7 +223,7 @@ private fun IdleContent(
         Spacer(Modifier.height(12.dp))
         AnimatedMedicationSelector(selectedTag = medicationTag, onSelect = onLogMedication)
 
-        Spacer(Modifier.height(48.dp))
+        Spacer(Modifier.height(24.dp))
         
         StabilaPrimaryButton(
             text = stringResource(R.string.test_start_button),
@@ -243,21 +243,20 @@ fun AdvancedTestCard(
 ) {
     val scale by animateFloatAsState(if (selected) 1.02f else 1f)
     val elevation by animateDpAsState(if (selected) 16.dp else 2.dp)
-    val borderColor by animateColorAsState(if (selected) NavyPrimary else Color.Transparent)
-    val bgColor by animateColorAsState(if (selected) CardWhite else CardWhite.copy(alpha = 0.6f))
+    val borderColor by animateColorAsState(if (selected) NavyPrimary else TextDark.copy(alpha = 0.06f))
     val adaptive = LocalAdaptiveParams.current
     
     // Base height grows slightly if high tremor, but text stays normal.
-    val cardMinHeight = if (adaptive.isHighTremorMode) 140.dp else 100.dp
+    val cardMinHeight = if (adaptive.isHighTremorMode) 120.dp else 100.dp
     
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .scale(scale)
-            .shadow(elevation, RoundedCornerShape(24.dp), spotColor = ShadowColor.copy(alpha = 0.15f))
+            .shadow(elevation, RoundedCornerShape(24.dp), spotColor = ShadowColor.copy(alpha = if (selected) 0.15f else 0.05f))
             .clip(RoundedCornerShape(24.dp))
-            .background(bgColor)
-            .border(2.dp, borderColor, RoundedCornerShape(24.dp))
+            .background(CardWhite)
+            .border(if (selected) 2.dp else 1.dp, borderColor, RoundedCornerShape(24.dp))
             .clickable(onClick = onClick)
             .padding(24.dp)
     ) {
@@ -736,5 +735,6 @@ private fun SpiralCanvasContent(
         Spacer(Modifier.height(16.dp))
     }
 }
+
 
 
