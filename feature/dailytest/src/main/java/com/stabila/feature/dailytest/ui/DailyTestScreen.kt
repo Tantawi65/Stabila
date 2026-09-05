@@ -241,13 +241,17 @@ fun AdvancedTestCard(
     selected: Boolean,
     onClick: () -> Unit
 ) {
+    val adaptive = LocalAdaptiveParams.current
+    
     val scale by animateFloatAsState(if (selected) 1.02f else 1f)
     val elevation by animateDpAsState(if (selected) 16.dp else 2.dp)
     val borderColor by animateColorAsState(if (selected) NavyPrimary else TextDark.copy(alpha = 0.06f))
-    val adaptive = LocalAdaptiveParams.current
     
-    // Base height grows slightly if high tremor, but text stays normal.
-    val cardMinHeight = if (adaptive.isHighTremorMode) 120.dp else 100.dp
+    // Adapt sizes based on tremor mode
+    val cardPadding = if (adaptive.isHighTremorMode) 24.dp else 16.dp
+    val iconBoxSize = if (adaptive.isHighTremorMode) 56.dp else 48.dp
+    val iconSize = if (adaptive.isHighTremorMode) 28.dp else 24.dp
+    val cardMinHeight = if (adaptive.isHighTremorMode) 120.dp else 80.dp
     
     Box(
         modifier = Modifier
@@ -258,20 +262,20 @@ fun AdvancedTestCard(
             .background(CardWhite)
             .border(if (selected) 2.dp else 1.dp, borderColor, RoundedCornerShape(24.dp))
             .clickable(onClick = onClick)
-            .padding(24.dp)
+            .padding(cardPadding)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.heightIn(min = cardMinHeight - 48.dp) // minus padding
+            modifier = Modifier.heightIn(min = cardMinHeight - (cardPadding * 2)) // minus padding
         ) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(iconBoxSize)
                     .clip(CircleShape)
                     .background(if (selected) NavyPrimary else BgCream),
                 contentAlignment = Alignment.Center
             ) {
-                 Icon(icon, contentDescription = null, tint = if (selected) CardWhite else NavyPrimary)
+                 Icon(icon, contentDescription = null, tint = if (selected) CardWhite else NavyPrimary, modifier = Modifier.size(iconSize))
             }
             Spacer(Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -281,7 +285,7 @@ fun AdvancedTestCard(
             }
             if (selected) {
                  Spacer(Modifier.width(8.dp))
-                 Icon(Icons.Default.CheckCircle, contentDescription = null, tint = NavyPrimary, modifier = Modifier.size(28.dp))
+                 Icon(Icons.Default.CheckCircle, contentDescription = null, tint = NavyPrimary, modifier = Modifier.size(iconSize))
             }
         }
     }
