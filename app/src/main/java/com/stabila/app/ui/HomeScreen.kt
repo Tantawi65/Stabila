@@ -81,6 +81,7 @@ fun HomeScreen(
 ) {
     val latestScore by viewModel.latestScore.collectAsState()
     val touchStabilizerEnabled by viewModel.touchStabilizerEnabled.collectAsState(initial = false)
+    val adaptive = LocalAdaptiveParams.current
 
     Column(
         modifier = Modifier
@@ -109,31 +110,29 @@ fun HomeScreen(
 
         Spacer(Modifier.height(16.dp))
 
-        // 2x2 Grid
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Grid (2x2 normally, 1-column if high tremor)
+        if (adaptive.isHighTremorMode) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 GridTile(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth().height(adaptive.buttonHeight),
                     icon = Icons.Default.TouchApp,
                     iconColor = TextDark,
-                    label = "Touch\nStabilizer",
+                    label = "Touch Stabilizer",
                     showGreenDot = true,
                     onClick = onNavigateToTouchStabilizer,
                     touchStabilizerEnabled = touchStabilizerEnabled
                 )
                 GridTile(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth().height(adaptive.buttonHeight),
                     icon = Icons.Default.Keyboard,
                     iconColor = TextDark,
-                    label = "Adaptive\nKeyboard",
+                    label = "Adaptive Keyboard",
                     showGreenDot = false,
                     onClick = onNavigateToKeyboardSetup,
                     touchStabilizerEnabled = touchStabilizerEnabled
                 )
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 GridTile(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth().height(adaptive.buttonHeight),
                     icon = Icons.Default.KeyboardArrowDown,
                     iconColor = TextDark,
                     label = "Auto-Scroll",
@@ -142,7 +141,7 @@ fun HomeScreen(
                     touchStabilizerEnabled = touchStabilizerEnabled
                 )
                 GridTile(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth().height(adaptive.buttonHeight),
                     icon = Icons.Default.MonitorHeart,
                     iconColor = NavyPrimary,
                     label = "Daily Test",
@@ -150,6 +149,49 @@ fun HomeScreen(
                     onClick = onNavigateToDailyTest,
                     touchStabilizerEnabled = touchStabilizerEnabled
                 )
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    GridTile(
+                        modifier = Modifier.weight(1f).height(130.dp),
+                        icon = Icons.Default.TouchApp,
+                        iconColor = TextDark,
+                        label = "Touch\nStabilizer",
+                        showGreenDot = true,
+                        onClick = onNavigateToTouchStabilizer,
+                        touchStabilizerEnabled = touchStabilizerEnabled
+                    )
+                    GridTile(
+                        modifier = Modifier.weight(1f).height(130.dp),
+                        icon = Icons.Default.Keyboard,
+                        iconColor = TextDark,
+                        label = "Adaptive\nKeyboard",
+                        showGreenDot = false,
+                        onClick = onNavigateToKeyboardSetup,
+                        touchStabilizerEnabled = touchStabilizerEnabled
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    GridTile(
+                        modifier = Modifier.weight(1f).height(130.dp),
+                        icon = Icons.Default.KeyboardArrowDown,
+                        iconColor = TextDark,
+                        label = "Auto-Scroll",
+                        showGreenDot = false,
+                        onClick = onNavigateToAutoScroll,
+                        touchStabilizerEnabled = touchStabilizerEnabled
+                    )
+                    GridTile(
+                        modifier = Modifier.weight(1f).height(130.dp),
+                        icon = Icons.Default.MonitorHeart,
+                        iconColor = NavyPrimary,
+                        label = "Daily Test",
+                        showGreenDot = false,
+                        onClick = onNavigateToDailyTest,
+                        touchStabilizerEnabled = touchStabilizerEnabled
+                    )
+                }
             }
         }
 
@@ -167,7 +209,6 @@ fun HomeScreen(
 
 @Composable
 private fun HeaderSection() {
-    val adaptive = LocalAdaptiveParams.current
     val dateText = try {
         val date = LocalDate.now()
         date.format(DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.ENGLISH)).uppercase()
@@ -176,16 +217,16 @@ private fun HeaderSection() {
     Column {
         Text(
             text = "Good morning, Mohamed",
-            fontSize = 24.sp * adaptive.fontScale,
+            fontSize = 24.sp,
             fontWeight = FontWeight.Medium,
             fontFamily = FontFamily.Serif,
             color = TextDark,
-            lineHeight = 32.sp * adaptive.fontScale
+            lineHeight = 32.sp
         )
         Spacer(Modifier.height(4.dp))
         Text(
             text = dateText,
-            fontSize = 12.sp * adaptive.fontScale,
+            fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
             color = TextGray,
             letterSpacing = 1.2.sp
@@ -195,7 +236,6 @@ private fun HeaderSection() {
 
 @Composable
 private fun ScoreRingCard(score: Float) {
-    val adaptive = LocalAdaptiveParams.current
     val displayScore = if (score >= 0f) score else 78f // fallback for design demo
     val animatedProgress by animateFloatAsState(
         targetValue = (displayScore / 100f).coerceIn(0f, 1f),
@@ -252,18 +292,18 @@ private fun ScoreRingCard(score: Float) {
                 )
 
                 Row(verticalAlignment = Alignment.Bottom) {
-                    val scoreFontSize = if (displayScore >= 100f) 52.sp else 60.sp
+                    val scoreFontSize = if (displayScore >= 100f) 46.sp else 60.sp
                     Text(
                         text = "${displayScore.toInt()}",
-                        fontSize = scoreFontSize * adaptive.fontScale,
+                        fontSize = scoreFontSize,
                         fontWeight = FontWeight.Medium,
                         fontFamily = FontFamily.Serif,
                         color = TextDark,
-                        lineHeight = scoreFontSize * adaptive.fontScale
+                        lineHeight = scoreFontSize
                     )
                     Text(
                         text = "/100",
-                        fontSize = 20.sp * adaptive.fontScale,
+                        fontSize = 20.sp,
                         fontFamily = FontFamily.Serif,
                         color = TextGray,
                         modifier = Modifier.padding(start = 4.dp, bottom = if (displayScore >= 100f) 2.dp else 6.dp)
@@ -275,7 +315,7 @@ private fun ScoreRingCard(score: Float) {
 
             Text(
                 text = "Today's Steadiness",
-                fontSize = 18.sp * adaptive.fontScale,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
                 color = TextDark
             )
@@ -302,7 +342,7 @@ private fun ScoreRingCard(score: Float) {
                 Spacer(Modifier.width(4.dp))
                 Text(
                     text = statusText,
-                    fontSize = 16.sp * adaptive.fontScale,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     color = GreenAccent
                 )
@@ -313,7 +353,6 @@ private fun ScoreRingCard(score: Float) {
 
 @Composable
 private fun SteadyCamCard(onClick: () -> Unit, touchStabilizerEnabled: Boolean) {
-    val adaptive = LocalAdaptiveParams.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -344,7 +383,7 @@ private fun SteadyCamCard(onClick: () -> Unit, touchStabilizerEnabled: Boolean) 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "SteadyCam",
-                fontSize = 24.sp * adaptive.fontScale,
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Serif,
                 color = CardWhite
@@ -352,9 +391,9 @@ private fun SteadyCamCard(onClick: () -> Unit, touchStabilizerEnabled: Boolean) 
             Spacer(Modifier.height(4.dp))
             Text(
                 text = "Stabilized camera for steady, blur-free photos",
-                fontSize = 18.sp * adaptive.fontScale,
+                fontSize = 18.sp,
                 color = CardWhite.copy(alpha = 0.85f),
-                lineHeight = 24.sp * adaptive.fontScale
+                lineHeight = 24.sp
             )
         }
     }
@@ -370,10 +409,8 @@ private fun GridTile(
     onClick: () -> Unit,
     touchStabilizerEnabled: Boolean
 ) {
-    val adaptive = LocalAdaptiveParams.current
     Box(
         modifier = modifier
-            .height(130.dp)
             .shadow(elevation = 8.dp, shape = RoundedCornerShape(24.dp), spotColor = ShadowColor.copy(alpha = 0.1f), ambientColor = ShadowColor.copy(alpha = 0.1f))
             .clip(RoundedCornerShape(24.dp))
             .border(1.dp, TextDark.copy(alpha = 0.06f), RoundedCornerShape(24.dp))
@@ -405,11 +442,11 @@ private fun GridTile(
             Spacer(Modifier.height(8.dp))
             Text(
                 text = label,
-                fontSize = 18.sp * adaptive.fontScale,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
                 color = TextDark,
                 textAlign = TextAlign.Center,
-                lineHeight = 24.sp * adaptive.fontScale
+                lineHeight = 24.sp
             )
         }
     }
@@ -417,7 +454,6 @@ private fun GridTile(
 
 @Composable
 private fun HistoryRow(onClick: () -> Unit, touchStabilizerEnabled: Boolean) {
-    val adaptive = LocalAdaptiveParams.current
     Column(modifier = Modifier.fillMaxWidth()) {
         // Top border
         Box(
@@ -439,7 +475,7 @@ private fun HistoryRow(onClick: () -> Unit, touchStabilizerEnabled: Boolean) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "History",
-                    fontSize = 20.sp * adaptive.fontScale,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = FontFamily.Serif,
                     color = TextDark
@@ -447,7 +483,7 @@ private fun HistoryRow(onClick: () -> Unit, touchStabilizerEnabled: Boolean) {
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = "Your last 7 tests",
-                    fontSize = 18.sp * adaptive.fontScale,
+                    fontSize = 18.sp,
                     color = TextGray
                 )
             }

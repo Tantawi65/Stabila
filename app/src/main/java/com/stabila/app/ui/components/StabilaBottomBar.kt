@@ -111,8 +111,6 @@ fun StabilaBottomBar(
                     },
                 contentAlignment = Alignment.Center
             ) {
-                val adaptive = com.stabila.core.ui.LocalAdaptiveParams.current
-                
                 // Background pill for active item
                 if (isActive) {
                     Box(
@@ -131,12 +129,12 @@ fun StabilaBottomBar(
                         imageVector = item.icon,
                         contentDescription = item.title,
                         tint = iconColor,
-                        modifier = Modifier.size(26.dp * adaptive.fontScale)
+                        modifier = Modifier.size(26.dp)
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = item.title,
-                        fontSize = 14.sp * adaptive.fontScale,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = iconColor,
                         letterSpacing = 0.5.sp
