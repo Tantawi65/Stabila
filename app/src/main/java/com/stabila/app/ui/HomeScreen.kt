@@ -38,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -403,9 +404,16 @@ private fun HistoryRow(onClick: () -> Unit, touchStabilizerEnabled: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .border(width = 1.dp, color = TextDark, shape = androidx.compose.ui.graphics.RectangleShape)
-            .padding(top = 24.dp)
-            .stabilizedClick(enabled = touchStabilizerEnabled, onClick = onClick),
+            .drawBehind {
+                drawLine(
+                    color = TextDark,
+                    start = androidx.compose.ui.geometry.Offset(0f, 0f),
+                    end = androidx.compose.ui.geometry.Offset(size.width, 0f),
+                    strokeWidth = 1.dp.toPx()
+                )
+            }
+            .stabilizedClick(enabled = touchStabilizerEnabled, onClick = onClick)
+            .padding(top = 24.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
