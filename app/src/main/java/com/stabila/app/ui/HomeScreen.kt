@@ -1,20 +1,17 @@
 package com.stabila.app.ui
 
-import androidx.compose.ui.res.stringResource
-import com.stabila.core.R
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.EaseInOutCubic
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,15 +24,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MonitorHeart
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.TouchApp
-import com.stabila.core.ui.stabilizedClick
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -43,20 +39,35 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.stabila.core.R
 import com.stabila.core.ui.Amber500
 import com.stabila.core.ui.Emerald500
 import com.stabila.core.ui.LocalAdaptiveParams
 import com.stabila.core.ui.Red500
-import com.stabila.core.ui.TremorLevel
-import com.stabila.core.ui.Violet500
+import com.stabila.core.ui.stabilizedClick
+
+// ── Design Tokens ──────────────────────────────────────────────────────────────
+private val TealPrimary   = Color(0xFF1B4F5C)
+private val TealLight     = Color(0xFFE8F2F5)
+private val WarmBg        = Color(0xFFF5F2ED)
+private val CardWhite     = Color(0xFFFFFFFF)
+private val DividerColor  = Color(0xFFEAE6E0)
+private val TextPrimary   = Color(0xFF16140F)
+private val TextSecondary = Color(0xFFA39D94)
+private val AmberDot      = Color(0xFFD4845A)
+private val GreenDot      = Color(0xFF4A9D7A)
 
 @Composable
 fun HomeScreen(
@@ -70,430 +81,406 @@ fun HomeScreen(
     onNavigateToAutoScroll: () -> Unit
 ) {
     val latestScore by viewModel.latestScore.collectAsState()
-    val adaptive = LocalAdaptiveParams.current
+    val touchStabilizerEnabled by viewModel.touchStabilizerEnabled.collectAsState(initial = false)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(WarmBg)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp)
+            .padding(horizontal = 20.dp)
     ) {
-        Spacer(Modifier.height(adaptive.spacingUnit + 8.dp))
+        Spacer(Modifier.height(20.dp))
 
-        // ── Header ────────────────────────────────────────────────────────────
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = stringResource(R.string.app_name),
-                    style = MaterialTheme.typography.headlineLarge.copy(
-                        fontSize = (26 * adaptive.fontScale).sp,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Text(
-                    text = stringResource(R.string.app_tagline),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-            // Brand mark — subtle glowing orb
-            Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.radialGradient(
-                            colors = listOf(MaterialTheme.colorScheme.primary.copy(alpha = 0.6f), MaterialTheme.colorScheme.primary.copy(alpha = 0f))
-                        )
-                    )
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(14.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
-                )
-            }
-        }
+        // Header
+        HomeHeader()
 
-        Spacer(Modifier.height(adaptive.spacingUnit + 4.dp))
+        Spacer(Modifier.height(20.dp))
 
-        // ── ATI Banner (only visible on elevated/severe days) ─────────────────
-        AnimatedVisibility(
-            visible = adaptive.isHighTremorMode,
-            enter = expandVertically() + fadeIn()
-        ) {
-            val bannerColor = if (adaptive.tremorLevel == TremorLevel.SEVERE) Red500 else Amber500
-            val bannerMsg = when (adaptive.tremorLevel) {
-                TremorLevel.ELEVATED -> stringResource(R.string.home_elevated_banner)
-                TremorLevel.SEVERE -> stringResource(R.string.home_severe_banner)
-                else -> ""
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(bannerColor.copy(alpha = 0.12f))
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(bannerColor)
-                )
-                Spacer(Modifier.width(10.dp))
-                Text(
-                    text = bannerMsg,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = (12 * adaptive.fontScale).sp
-                    ),
-                    color = bannerColor,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-            Spacer(Modifier.height(adaptive.spacingUnit))
-        }
+        // Score ring
+        ScoreRingCard(score = latestScore)
 
-        Spacer(Modifier.height(adaptive.spacingUnit))
+        Spacer(Modifier.height(14.dp))
 
-        // ── Score Ring Card ───────────────────────────────────────────────────
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(28.dp))
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.surface)
-                    )
-                )
-                .padding(32.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                val score = latestScore
-                val ringColor = when {
-                    score < 0f -> MaterialTheme.colorScheme.outline
-                    score < 30f -> Emerald500
-                    score < 65f -> Amber500
-                    else -> Red500
-                }
-                val ringProgress = (score / 100f).coerceIn(0f, 1f)
-                val animatedProgress by animateFloatAsState(
-                    targetValue = ringProgress,
-                    animationSpec = tween(1200, easing = EaseInOutCubic),
-                    label = "score_ring"
-                )
-
-                // Score ring
-                val ringSize = (160 * adaptive.fontScale).dp.coerceIn(140.dp, 200.dp)
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(ringSize)) {
-                    CircularProgressIndicator(
-                        progress = { animatedProgress },
-                        modifier = Modifier.fillMaxSize(),
-                        color = ringColor,
-                        trackColor = MaterialTheme.colorScheme.outline,
-                        strokeWidth = 10.dp,
-                        strokeCap = StrokeCap.Round
-                    )
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        if (score >= 0f) {
-                            Text(
-                                text = "${score.toInt()}",
-                                style = MaterialTheme.typography.displaySmall.copy(
-                                    fontSize = (36 * adaptive.fontScale).sp,
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            Text(
-                                text = "/ 100",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        } else {
-                            Text(
-                                text = "—",
-                                style = MaterialTheme.typography.displaySmall.copy(
-                                    fontSize = (36 * adaptive.fontScale).sp,
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = MaterialTheme.colorScheme.outline
-                            )
-                        }
-                    }
-                }
-
-                Spacer(Modifier.height(20.dp))
-
-                Text(
-                    text = when {
-                        score < 0f -> stringResource(R.string.home_score_empty)
-                        score < 30f -> stringResource(R.string.home_score_stable)
-                        score < 65f -> stringResource(R.string.home_score_mild)
-                        else -> stringResource(R.string.home_score_high)
-                    },
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = (14 * adaptive.fontScale).sp
-                    ),
-                    color = if (score < 0f) MaterialTheme.colorScheme.onSurfaceVariant else ringColor,
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Medium
-                )
-
-                if (score >= 0f) {
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(R.string.home_score_latest_label),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-
-        Spacer(Modifier.height(adaptive.spacingUnit + 8.dp))
-
-        // ── Quick Actions ─────────────────────────────────────────────────────
-        Text(
-            text = stringResource(R.string.home_quick_actions),
-            style = MaterialTheme.typography.titleLarge.copy(
-                fontSize = (16 * adaptive.fontScale).sp
-            ),
-            color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(bottom = adaptive.spacingUnit / 2)
+        // Featured SteadyCam
+        FeaturedCard(
+            title = "SteadyCam",
+            subtitle = "Stabilized camera · blur-free photos",
+            icon = Icons.Default.CameraAlt,
+            onClick = onNavigateToCamera,
+            touchStabilizerEnabled = touchStabilizerEnabled
         )
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(16.dp))
 
-        if (adaptive.isHighTremorMode) {
-            // One per row
-            Column(verticalArrangement = Arrangement.spacedBy(adaptive.spacingUnit / 2)) {
-                ActionCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    title = stringResource(R.string.home_action_test_title),
-                    subtitle = stringResource(R.string.home_action_test_subtitle),
-                    icon = Icons.Default.MonitorHeart,
-                    accentColor = MaterialTheme.colorScheme.primary,
-                    adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                    onClick = onNavigateToDailyTest
-                )
-                ActionCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    title = stringResource(R.string.home_action_camera_title),
-                    subtitle = stringResource(R.string.home_action_camera_subtitle),
-                    icon = Icons.Default.CameraAlt,
-                    accentColor = Violet500,
-                    adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                    onClick = onNavigateToCamera
-                )
-                ActionCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    title = stringResource(R.string.home_action_history_title),
-                    subtitle = stringResource(R.string.home_action_history_subtitle),
-                    icon = Icons.Default.History,
-                    accentColor = Emerald500,
-                    adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                    onClick = onNavigateToHistory
-                )
-                ActionCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    title = stringResource(R.string.home_action_autoscroll_title),
-                    subtitle = stringResource(R.string.home_action_autoscroll_subtitle),
-                    icon = Icons.Default.Keyboard,
-                    accentColor = MaterialTheme.colorScheme.primary,
-                    adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                    onClick = onNavigateToAutoScroll
-                )
-                ActionCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    title = stringResource(R.string.home_action_keyboard_title),
-                    subtitle = stringResource(R.string.home_action_keyboard_subtitle),
-                    icon = Icons.Default.Keyboard,
-                    accentColor = MaterialTheme.colorScheme.primary,
-                    adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                    onClick = onNavigateToKeyboardSetup
-                )
-                ActionCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    title = stringResource(R.string.home_action_stabilizer_title),
-                    subtitle = stringResource(R.string.home_action_stabilizer_subtitle),
+        // Section label
+        Text(
+            text = "QUICK ACCESS",
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = TextSecondary,
+            letterSpacing = 1.2.sp,
+            modifier = Modifier.padding(bottom = 10.dp)
+        )
+
+        // 2×2 grid
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                SmallActionTile(
+                    modifier = Modifier.weight(1f),
+                    title = "Touch Stabilizer",
                     icon = Icons.Default.TouchApp,
-                    accentColor = MaterialTheme.colorScheme.tertiary,
-                    adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                    onClick = onNavigateToTouchStabilizer
+                    dotColor = TealPrimary,
+                    onClick = onNavigateToTouchStabilizer,
+                    touchStabilizerEnabled = touchStabilizerEnabled
                 )
-                ActionCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    title = stringResource(R.string.home_action_settings_title),
-                    subtitle = stringResource(R.string.home_action_settings_subtitle),
-                    icon = Icons.Default.Settings,
-                    accentColor = Amber500,
-                    adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                    onClick = onNavigateToSettings
+                SmallActionTile(
+                    modifier = Modifier.weight(1f),
+                    title = "Adaptive Keyboard",
+                    icon = Icons.Default.Keyboard,
+                    dotColor = AmberDot,
+                    onClick = onNavigateToKeyboardSetup,
+                    touchStabilizerEnabled = touchStabilizerEnabled
                 )
             }
-        } else {
-            // Two per row
-            Column(verticalArrangement = Arrangement.spacedBy(adaptive.spacingUnit / 2)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(adaptive.spacingUnit / 2)
-                ) {
-                    ActionCard(
-                        modifier = Modifier.weight(1f),
-                        title = stringResource(R.string.home_action_test_title),
-                        subtitle = stringResource(R.string.home_action_test_subtitle),
-                        icon = Icons.Default.MonitorHeart,
-                        accentColor = MaterialTheme.colorScheme.primary,
-                        adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                        onClick = onNavigateToDailyTest
-                    )
-                    ActionCard(
-                        modifier = Modifier.weight(1f),
-                        title = stringResource(R.string.home_action_camera_title),
-                        subtitle = stringResource(R.string.home_action_camera_subtitle),
-                        icon = Icons.Default.CameraAlt,
-                        accentColor = Violet500,
-                        adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                        onClick = onNavigateToCamera
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(adaptive.spacingUnit / 2)
-                ) {
-                    ActionCard(
-                        modifier = Modifier.weight(1f),
-                        title = stringResource(R.string.home_action_history_title),
-                        subtitle = stringResource(R.string.home_action_history_subtitle),
-                        icon = Icons.Default.History,
-                        accentColor = Emerald500,
-                        adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                        onClick = onNavigateToHistory
-                    )
-                    ActionCard(
-                        modifier = Modifier.weight(1f),
-                        title = stringResource(R.string.home_action_autoscroll_title),
-                        subtitle = stringResource(R.string.home_action_autoscroll_subtitle),
-                        icon = Icons.Default.Keyboard,
-                        accentColor = MaterialTheme.colorScheme.primary,
-                        adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                        onClick = onNavigateToAutoScroll
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(adaptive.spacingUnit / 2)
-                ) {
-                    ActionCard(
-                        modifier = Modifier.weight(1f),
-                        title = stringResource(R.string.home_action_keyboard_title),
-                        subtitle = stringResource(R.string.home_action_keyboard_subtitle),
-                        icon = Icons.Default.Keyboard,
-                        accentColor = MaterialTheme.colorScheme.primary,
-                        adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                        onClick = onNavigateToKeyboardSetup
-                    )
-                    ActionCard(
-                        modifier = Modifier.weight(1f),
-                        title = stringResource(R.string.home_action_stabilizer_title),
-                        subtitle = stringResource(R.string.home_action_stabilizer_subtitle),
-                        icon = Icons.Default.TouchApp,
-                        accentColor = MaterialTheme.colorScheme.tertiary,
-                        adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                        onClick = onNavigateToTouchStabilizer
-                    )
-                }
-                
-                ActionCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    title = stringResource(R.string.home_action_settings_title),
-                    subtitle = stringResource(R.string.home_action_settings_subtitle),
-                    icon = Icons.Default.Settings,
-                    accentColor = Amber500,
-                    adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
-                    onClick = onNavigateToSettings
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                SmallActionTile(
+                    modifier = Modifier.weight(1f),
+                    title = "Auto Scroll",
+                    icon = Icons.Default.Keyboard,
+                    dotColor = TealPrimary,
+                    onClick = onNavigateToAutoScroll,
+                    touchStabilizerEnabled = touchStabilizerEnabled
+                )
+                SmallActionTile(
+                    modifier = Modifier.weight(1f),
+                    title = "Daily Test",
+                    icon = Icons.Default.MonitorHeart,
+                    dotColor = GreenDot,
+                    onClick = onNavigateToDailyTest,
+                    touchStabilizerEnabled = touchStabilizerEnabled
                 )
             }
         }
 
-        Spacer(Modifier.height(adaptive.spacingUnit + 8.dp))
+        Spacer(Modifier.height(16.dp))
+
+        // Divider before history
+        HorizontalDivider(color = DividerColor, thickness = 1.dp)
+        Spacer(Modifier.height(14.dp))
+
+        // History row
+        HistoryRow(
+            onClick = onNavigateToHistory,
+            touchStabilizerEnabled = touchStabilizerEnabled
+        )
+
+        Spacer(Modifier.height(28.dp))
     }
 }
 
+// ── Header ─────────────────────────────────────────────────────────────────────
 @Composable
-private fun ActionCard(
-    modifier: Modifier = Modifier,
+private fun HomeHeader() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(
+                text = "Good morning",
+                fontSize = 13.sp,
+                color = TextSecondary,
+                fontWeight = FontWeight.Normal
+            )
+            Text(
+                text = stringResource(R.string.app_name),
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+        }
+        Box(
+            modifier = Modifier
+                .size(42.dp)
+                .clip(CircleShape)
+                .background(TealLight)
+                .border(1.5.dp, TealPrimary.copy(alpha = 0.25f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "S",
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold,
+                color = TealPrimary
+            )
+        }
+    }
+}
+
+// ── Score Ring Card ─────────────────────────────────────────────────────────────
+@Composable
+private fun ScoreRingCard(score: Float) {
+    val ringColor = when {
+        score < 0f  -> Color(0xFFCCC8C0)
+        score < 30f -> Emerald500
+        score < 65f -> Amber500
+        else        -> Red500
+    }
+    val animatedProgress by animateFloatAsState(
+        targetValue = (score / 100f).coerceIn(0f, 1f),
+        animationSpec = tween(1400, easing = EaseInOutCubic),
+        label = "ring"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(CardWhite)
+            .border(1.dp, DividerColor, RoundedCornerShape(24.dp))
+            .padding(28.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(modifier = Modifier.size(160.dp), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(
+                    progress = { animatedProgress },
+                    modifier = Modifier.fillMaxSize(),
+                    color = ringColor,
+                    trackColor = Color(0xFFEDE9E3),
+                    strokeWidth = 14.dp,
+                    strokeCap = StrokeCap.Round
+                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = if (score >= 0f) "${score.toInt()}" else "—",
+                        fontSize = 52.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (score >= 0f) TextPrimary else Color(0xFFCCC8C0)
+                    )
+                    if (score >= 0f) {
+                        Text(text = "/ 100", fontSize = 14.sp, color = TextSecondary)
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(18.dp))
+
+            Text(
+                text = "Today's Steadiness",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimary
+            )
+
+            Spacer(Modifier.height(6.dp))
+
+            if (score >= 0f) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowUp,
+                        contentDescription = null,
+                        tint = TealPrimary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(2.dp))
+                    Text(
+                        text = when {
+                            score < 30f -> "Stable — low tremor"
+                            score < 65f -> "Mild tremor detected"
+                            else        -> "High tremor — rest up"
+                        },
+                        fontSize = 13.sp,
+                        color = TealPrimary,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            } else {
+                Text(
+                    text = "Take a daily test to see your score",
+                    fontSize = 13.sp,
+                    color = TextSecondary
+                )
+            }
+        }
+    }
+}
+
+// ── Featured Card ───────────────────────────────────────────────────────────────
+@Composable
+private fun FeaturedCard(
     title: String,
     subtitle: String,
     icon: ImageVector,
-    accentColor: Color,
-    adaptiveHeight: androidx.compose.ui.unit.Dp,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    touchStabilizerEnabled: Boolean
 ) {
-    val adaptive = LocalAdaptiveParams.current
-    val viewModel: HomeViewModel = androidx.hilt.navigation.compose.hiltViewModel()
-    val touchStabilizerEnabled by viewModel.touchStabilizerEnabled.collectAsState(initial = false)
-    
-    Box(
-        modifier = modifier
-            .height(adaptiveHeight)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(accentColor.copy(alpha = 0.18f), MaterialTheme.colorScheme.surface)
-                )
-            )
+            .background(TealPrimary)
             .stabilizedClick(enabled = touchStabilizerEnabled, onClick = onClick)
-            .padding(16.dp),
-        contentAlignment = Alignment.BottomStart
+            .padding(horizontal = 20.dp, vertical = 18.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Accent orb in top-right
         Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(52.dp)
                 .clip(CircleShape)
-                .background(accentColor.copy(alpha = 0.15f))
-                .align(Alignment.TopEnd),
+                .background(CardWhite),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = accentColor,
-                modifier = Modifier.size(20.dp)
+                tint = TealPrimary,
+                modifier = Modifier.size(26.dp)
             )
         }
-
-        Column {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontSize = (14 * adaptive.fontScale).sp,
-                    fontWeight = FontWeight.Bold
-                ),
-                color = MaterialTheme.colorScheme.onBackground
-            )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = CardWhite)
+            Spacer(Modifier.height(2.dp))
             Text(
                 text = subtitle,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    fontSize = (11 * adaptive.fontScale).sp
-                ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                fontSize = 13.sp,
+                color = CardWhite.copy(alpha = 0.72f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        Icon(
+            imageVector = Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = CardWhite.copy(alpha = 0.8f),
+            modifier = Modifier.size(22.dp)
+        )
+    }
+}
+
+// ── Small Action Tile ───────────────────────────────────────────────────────────
+@Composable
+private fun SmallActionTile(
+    modifier: Modifier = Modifier,
+    title: String,
+    icon: ImageVector,
+    dotColor: Color,
+    onClick: () -> Unit,
+    touchStabilizerEnabled: Boolean
+) {
+    Box(
+        modifier = modifier
+            .aspectRatio(1f)
+            .clip(RoundedCornerShape(18.dp))
+            .background(CardWhite)
+            .border(1.dp, DividerColor, RoundedCornerShape(18.dp))
+            .stabilizedClick(enabled = touchStabilizerEnabled, onClick = onClick)
+            .padding(14.dp)
+    ) {
+        // Status dot
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .clip(CircleShape)
+                .background(dotColor)
+                .align(Alignment.TopEnd)
+        )
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(TealLight),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = TealPrimary,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+            Text(
+                text = title,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
 }
 
+// ── History Row ─────────────────────────────────────────────────────────────────
+@Composable
+private fun HistoryRow(onClick: () -> Unit, touchStabilizerEnabled: Boolean) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(CardWhite)
+            .border(1.dp, DividerColor, RoundedCornerShape(16.dp))
+            .stabilizedClick(enabled = touchStabilizerEnabled, onClick = onClick)
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .height(38.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(TealPrimary)
+        )
+        Spacer(Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = "History", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Spacer(Modifier.height(2.dp))
+            Text(text = "Your last 7 tests", fontSize = 13.sp, color = TextSecondary)
+        }
+        MiniSparkline()
+        Spacer(Modifier.width(10.dp))
+        Icon(
+            imageVector = Icons.Default.ChevronRight,
+            contentDescription = null,
+            tint = TealPrimary,
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+// ── Mini Sparkline (Canvas) ─────────────────────────────────────────────────────
+@Composable
+private fun MiniSparkline() {
+    val points = listOf(0.6f, 0.42f, 0.55f, 0.32f, 0.5f, 0.28f, 0.44f)
+    Canvas(modifier = Modifier.width(58.dp).height(30.dp)) {
+        val w = size.width
+        val h = size.height
+        val stepX = w / (points.size - 1)
+
+        val path = Path()
+        points.forEachIndexed { i, v ->
+            val x = i * stepX
+            val y = h - (v * h)
+            if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+        }
+        drawPath(
+            path = path,
+            color = TealPrimary,
+            style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
+        points.forEachIndexed { i, v ->
+            drawCircle(
+                color = TealPrimary,
+                radius = 3.dp.toPx(),
+                center = Offset(i * stepX, h - (v * h))
+            )
+        }
+    }
+}
