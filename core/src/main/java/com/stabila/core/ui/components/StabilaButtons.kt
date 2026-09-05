@@ -85,7 +85,7 @@ fun StabilaPrimaryButton(
             Text(
                 text = text,
                 style = MaterialTheme.typography.labelLarge.copy(
-                    fontSize = (16 * adaptive.fontScale).sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold
                 ),
                 color = if (enabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
@@ -124,7 +124,7 @@ fun StabilaSecondaryButton(
         Text(
             text = text,
             style = MaterialTheme.typography.labelLarge.copy(
-                fontSize = (16 * adaptive.fontScale).sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold
             )
         )

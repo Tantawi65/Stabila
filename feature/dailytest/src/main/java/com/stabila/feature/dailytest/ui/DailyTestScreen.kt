@@ -60,10 +60,13 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.stabila.core.ui.LocalAdaptiveParams
+import androidx.compose.ui.draw.shadow
 
 import androidx.compose.ui.res.stringResource
 import com.stabila.core.R
@@ -75,6 +78,16 @@ import com.stabila.core.ui.components.StabilaSecondaryButton
 import com.stabila.feature.dailytest.DailyTestViewModel
 import com.stabila.feature.dailytest.DailyTestViewModel.TestState
 
+
+
+// Exact colors from React code
+private val BgCream = Color(0xFFFAF7F2)
+private val TextDark = Color(0xFF1C2430)
+private val TextGray = Color(0xFF6B7280)
+private val NavyPrimary = Color(0xFF2E4B6B)
+private val GreenAccent = Color(0xFF6E8B6B)
+private val CardWhite = Color(0xFFFFFFFF)
+private val ShadowColor = Color(0xFF1C2430)
 
 @Composable
 fun DailyTestScreen(
@@ -88,7 +101,7 @@ fun DailyTestScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(BgCream)
     ) {
 
 
@@ -135,6 +148,7 @@ private fun IdleContent(
     onLogMedication: (String?) -> Unit
 ) {
     val context = LocalContext.current
+    val adaptive = LocalAdaptiveParams.current
     var selectedType by remember { mutableStateOf(TestType.ACTION) }
 
     Column(
@@ -148,14 +162,16 @@ private fun IdleContent(
         Box(
             modifier = Modifier
                 .size(96.dp)
+                .shadow(elevation = 8.dp, shape = CircleShape, spotColor = ShadowColor.copy(alpha = 0.12f), ambientColor = ShadowColor.copy(alpha = 0.12f))
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                .background(CardWhite)
+                .border(1.dp, TextDark.copy(alpha = 0.06f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.CheckCircle,
                 contentDescription = stringResource(R.string.test_title),
-                tint = MaterialTheme.colorScheme.primary,
+                tint = NavyPrimary,
                 modifier = Modifier.size(48.dp)
             )
         }
@@ -163,9 +179,10 @@ private fun IdleContent(
         Text(
             text = stringResource(R.string.test_title),
             style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = TextDark,
             textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            fontFamily = FontFamily.Serif
         )
         Spacer(Modifier.height(24.dp))
         
@@ -173,32 +190,46 @@ private fun IdleContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(adaptive.buttonHeight)
+                .shadow(elevation = 4.dp, shape = RoundedCornerShape(100.dp), spotColor = ShadowColor.copy(alpha = 0.08f), ambientColor = ShadowColor.copy(alpha = 0.08f))
                 .clip(RoundedCornerShape(100.dp))
-                .background(MaterialTheme.colorScheme.surface),
-            horizontalArrangement = Arrangement.Center
+                .background(CardWhite)
+                .border(1.dp, TextDark.copy(alpha = 0.06f), RoundedCornerShape(100.dp)),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
                     .weight(1f)
+                    .fillMaxSize()
                     .clip(RoundedCornerShape(100.dp))
-                    .background(if (selectedType == TestType.ACTION) MaterialTheme.colorScheme.primary else Color.Transparent)
-                    .clickable { selectedType = TestType.ACTION }
-                    .padding(vertical = 12.dp),
+                    .background(if (selectedType == TestType.ACTION) NavyPrimary else Color.Transparent)
+                    .clickable { selectedType = TestType.ACTION },
                 contentAlignment = Alignment.Center
             ) {
-                Text(stringResource(R.string.test_type_action), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Text(
+                    text = stringResource(R.string.test_type_action), 
+                    color = if (selectedType == TestType.ACTION) CardWhite else TextDark, 
+                    fontWeight = FontWeight.SemiBold, 
+                    fontSize = 14.sp
+                )
             }
 
             Box(
                 modifier = Modifier
                     .weight(1f)
+                    .fillMaxSize()
                     .clip(RoundedCornerShape(100.dp))
-                    .background(if (selectedType == TestType.SPIRAL) MaterialTheme.colorScheme.primary else Color.Transparent)
-                    .clickable { selectedType = TestType.SPIRAL }
-                    .padding(vertical = 12.dp),
+                    .background(if (selectedType == TestType.SPIRAL) NavyPrimary else Color.Transparent)
+                    .clickable { selectedType = TestType.SPIRAL },
                 contentAlignment = Alignment.Center
             ) {
-                Text(stringResource(R.string.test_type_spiral), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Text(
+                    text = stringResource(R.string.test_type_spiral), 
+                    color = if (selectedType == TestType.SPIRAL) CardWhite else TextDark, 
+                    fontWeight = FontWeight.SemiBold, 
+                    fontSize = 14.sp
+                )
             }
         }
         
@@ -209,7 +240,7 @@ private fun IdleContent(
                 TestType.SPIRAL -> stringResource(R.string.test_spiral_desc)
             },
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = TextGray,
             textAlign = TextAlign.Center,
             lineHeight = 24.sp
         )
@@ -219,15 +250,19 @@ private fun IdleContent(
         Text(
             text = stringResource(R.string.test_medication_title),
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = TextGray
         )
         Spacer(Modifier.height(8.dp))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(adaptive.buttonHeight)
+                .shadow(elevation = 4.dp, shape = RoundedCornerShape(100.dp), spotColor = ShadowColor.copy(alpha = 0.08f), ambientColor = ShadowColor.copy(alpha = 0.08f))
                 .clip(RoundedCornerShape(100.dp))
-                .background(MaterialTheme.colorScheme.surface),
-            horizontalArrangement = Arrangement.Center
+                .background(CardWhite)
+                .border(1.dp, TextDark.copy(alpha = 0.06f), RoundedCornerShape(100.dp)),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             listOf(
                 null to stringResource(R.string.test_medication_none),
@@ -238,15 +273,15 @@ private fun IdleContent(
                 Box(
                     modifier = Modifier
                         .weight(1f)
+                        .fillMaxSize()
                         .clip(RoundedCornerShape(100.dp))
-                        .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
-                        .clickable { onLogMedication(tag) }
-                        .padding(vertical = 12.dp),
+                        .background(if (isSelected) NavyPrimary else Color.Transparent)
+                        .clickable { onLogMedication(tag) },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = label, 
-                        color = if (isSelected) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onSurfaceVariant, 
+                        color = if (isSelected) CardWhite else TextGray, 
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium, 
                         fontSize = 13.sp
                     )
@@ -280,20 +315,20 @@ private fun CountdownContent(seconds: Int) {
         Text(
             text = stringResource(R.string.test_get_ready),
             style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = TextGray
         )
         Spacer(Modifier.height(24.dp))
         Text(
             text = "$seconds",
             style = MaterialTheme.typography.displayLarge.copy(fontSize = 96.sp),
-            color = MaterialTheme.colorScheme.primary,
+            color = NavyPrimary,
             fontWeight = FontWeight.Bold
         )
         Spacer(Modifier.height(12.dp))
         Text(
             text = stringResource(R.string.test_measuring_in),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = TextGray
         )
     }
 }
@@ -319,14 +354,14 @@ private fun RecordingContent(progress: Float, magnitude: Float, testType: TestTy
             Text(
                 text = stringResource(R.string.test_measuring),
                 style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = TextDark,
                 fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = stringResource(R.string.test_measuring_hint),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = TextGray
             )
         }
 
@@ -335,8 +370,11 @@ private fun RecordingContent(progress: Float, magnitude: Float, testType: TestTy
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surface)
+                    .height(200.dp)
+                    .shadow(elevation = 8.dp, shape = RoundedCornerShape(24.dp), spotColor = ShadowColor.copy(alpha = 0.12f), ambientColor = ShadowColor.copy(alpha = 0.12f))
+                    .clip(RoundedCornerShape(24.dp))
+                    .border(1.dp, TextDark.copy(alpha = 0.06f), RoundedCornerShape(24.dp))
+                    .background(CardWhite)
                     .padding(vertical = 8.dp)
             ) {
                 TremorWaveform(magnitude = magnitude)
@@ -348,17 +386,17 @@ private fun RecordingContent(progress: Float, magnitude: Float, testType: TestTy
                 progress = { animatedProgress },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(6.dp)
+                    .height(8.dp)
                     .clip(RoundedCornerShape(100.dp)),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.outline,
+                color = NavyPrimary,
+                trackColor = TextDark.copy(alpha = 0.1f),
                 strokeCap = StrokeCap.Round
             )
             Spacer(Modifier.height(8.dp))
             Text(
                 text = "${(animatedProgress * 100).toInt()}%",
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = TextGray
             )
         }
 
@@ -376,7 +414,7 @@ private fun ProcessingContent() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CircularProgressIndicator(
-            color = MaterialTheme.colorScheme.primary,
+            color = NavyPrimary,
             strokeWidth = 3.dp,
             modifier = Modifier.size(56.dp)
         )
@@ -384,7 +422,7 @@ private fun ProcessingContent() {
         Text(
             text = stringResource(R.string.test_analysing),
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = TextGray
         )
     }
 }
@@ -409,38 +447,52 @@ private fun ResultContent(
         // Big score ring
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.size(160.dp)
+            modifier = Modifier
+                .size(240.dp)
+                .shadow(elevation = 8.dp, shape = CircleShape, spotColor = ShadowColor.copy(alpha = 0.12f), ambientColor = ShadowColor.copy(alpha = 0.12f))
+                .clip(CircleShape)
+                .background(CardWhite)
+                .border(1.dp, TextDark.copy(alpha = 0.06f), CircleShape)
         ) {
             val score = result?.overallScore ?: 0f
             val ringColor = when {
-                score < 30f -> Color(0xFF22C55E)
-                score < 65f -> Color(0xFFFBBF24)
-                else        -> MaterialTheme.colorScheme.error
+                score < 30f -> GreenAccent
+                score < 65f -> Color(0xFFEAB308)
+                else        -> Color(0xFFEF4444)
             }
+            
+            CircularProgressIndicator(
+                progress = { 1f },
+                modifier = Modifier.size(190.dp),
+                color = TextDark.copy(alpha = 0.1f),
+                strokeWidth = 10.dp
+            )
+            
             CircularProgressIndicator(
                 progress = { (score / 100f).coerceIn(0f, 1f) },
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.size(190.dp),
                 color = ringColor,
-                trackColor = MaterialTheme.colorScheme.outline,
                 strokeWidth = 10.dp,
                 strokeCap = StrokeCap.Round
             )
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "${score.toInt()}",
-                    style = MaterialTheme.typography.displaySmall,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontWeight = FontWeight.Bold
+                    fontSize = 64.sp,
+                    fontFamily = FontFamily.Serif,
+                    color = TextDark,
+                    fontWeight = FontWeight.Medium
                 )
                 Text(
                     text = "/ 100",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    fontSize = 20.sp,
+                    fontFamily = FontFamily.Serif,
+                    color = TextGray
                 )
             }
         }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(16.dp))
         
         if (result?.classification != null && result.classification != com.stabila.core.domain.TremorClassification.UNCLASSIFIED) {
             val title = when (result.classification) {
@@ -452,7 +504,7 @@ private fun ResultContent(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
+                color = NavyPrimary,
                 fontWeight = FontWeight.Bold
             )
         } else {
@@ -463,7 +515,7 @@ private fun ResultContent(
                     else                                -> stringResource(R.string.test_res_high)
                 },
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground
+                color = TextDark
             )
         }
 
@@ -511,21 +563,23 @@ private fun DetailCard(
 ) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surface)
+            .shadow(elevation = 8.dp, shape = RoundedCornerShape(24.dp), spotColor = ShadowColor.copy(alpha = 0.12f), ambientColor = ShadowColor.copy(alpha = 0.12f))
+            .clip(RoundedCornerShape(24.dp))
+            .border(1.dp, TextDark.copy(alpha = 0.06f), RoundedCornerShape(24.dp))
+            .background(CardWhite)
             .padding(16.dp)
     ) {
-        Column {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = TextGray
             )
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(8.dp))
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = TextDark,
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -550,14 +604,14 @@ private fun SpiralCanvasContent(
             Text(
                 text = stringResource(R.string.test_trace_spiral_title),
                 style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground,
+                color = TextDark,
                 fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = stringResource(R.string.test_trace_spiral_hint),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = TextGray
             )
         }
 
@@ -566,8 +620,10 @@ private fun SpiralCanvasContent(
                 .fillMaxWidth()
                 .weight(1f)
                 .padding(vertical = 24.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surface)
+                .shadow(elevation = 8.dp, shape = RoundedCornerShape(24.dp), spotColor = ShadowColor.copy(alpha = 0.12f), ambientColor = ShadowColor.copy(alpha = 0.12f))
+                .clip(RoundedCornerShape(24.dp))
+                .border(1.dp, TextDark.copy(alpha = 0.06f), RoundedCornerShape(24.dp))
+                .background(CardWhite)
                 .pointerInput(Unit) {
                     awaitPointerEventScope {
                         while (true) {
@@ -591,8 +647,8 @@ private fun SpiralCanvasContent(
                     }
                 }
         ) {
-            val outlineColor = MaterialTheme.colorScheme.outline
-            val primaryColor = MaterialTheme.colorScheme.primary
+            val outlineColor = TextDark.copy(alpha = 0.1f)
+            val primaryColor = NavyPrimary
             
             androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
                 val center = androidx.compose.ui.geometry.Offset(size.width / 2, size.height / 2)
@@ -647,3 +703,4 @@ private fun SpiralCanvasContent(
         Spacer(Modifier.height(16.dp))
     }
 }
+
