@@ -115,20 +115,20 @@ fun HomeScreen(
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 GridTile(
                     modifier = Modifier.fillMaxWidth().height(130.dp),
-                    icon = Icons.Default.TouchApp,
-                    iconColor = TextDark,
-                    label = "Touch Stabilizer",
-                    showGreenDot = true,
-                    onClick = onNavigateToTouchStabilizer,
+                    icon = Icons.Default.MonitorHeart,
+                    iconColor = NavyPrimary,
+                    label = "Daily Test",
+                    showGreenDot = false,
+                    onClick = onNavigateToDailyTest,
                     touchStabilizerEnabled = touchStabilizerEnabled
                 )
                 GridTile(
                     modifier = Modifier.fillMaxWidth().height(130.dp),
-                    icon = Icons.Default.Keyboard,
+                    icon = Icons.Default.TouchApp,
                     iconColor = TextDark,
-                    label = "Adaptive Keyboard",
-                    showGreenDot = false,
-                    onClick = onNavigateToKeyboardSetup,
+                    label = "Touch Stabilizer",
+                    showGreenDot = touchStabilizerEnabled,
+                    onClick = onNavigateToTouchStabilizer,
                     touchStabilizerEnabled = touchStabilizerEnabled
                 )
                 GridTile(
@@ -142,11 +142,11 @@ fun HomeScreen(
                 )
                 GridTile(
                     modifier = Modifier.fillMaxWidth().height(130.dp),
-                    icon = Icons.Default.MonitorHeart,
-                    iconColor = NavyPrimary,
-                    label = "Daily Test",
+                    icon = Icons.Default.Keyboard,
+                    iconColor = TextDark,
+                    label = "Adaptive Keyboard",
                     showGreenDot = false,
-                    onClick = onNavigateToDailyTest,
+                    onClick = onNavigateToKeyboardSetup,
                     touchStabilizerEnabled = touchStabilizerEnabled
                 )
             }
@@ -155,20 +155,20 @@ fun HomeScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     GridTile(
                         modifier = Modifier.weight(1f).height(130.dp),
-                        icon = Icons.Default.TouchApp,
-                        iconColor = TextDark,
-                        label = "Touch\nStabilizer",
-                        showGreenDot = true,
-                        onClick = onNavigateToTouchStabilizer,
+                        icon = Icons.Default.MonitorHeart,
+                        iconColor = NavyPrimary,
+                        label = "Daily Test",
+                        showGreenDot = false,
+                        onClick = onNavigateToDailyTest,
                         touchStabilizerEnabled = touchStabilizerEnabled
                     )
                     GridTile(
                         modifier = Modifier.weight(1f).height(130.dp),
-                        icon = Icons.Default.Keyboard,
+                        icon = Icons.Default.TouchApp,
                         iconColor = TextDark,
-                        label = "Adaptive\nKeyboard",
-                        showGreenDot = false,
-                        onClick = onNavigateToKeyboardSetup,
+                        label = "Touch\nStabilizer",
+                        showGreenDot = touchStabilizerEnabled,
+                        onClick = onNavigateToTouchStabilizer,
                         touchStabilizerEnabled = touchStabilizerEnabled
                     )
                 }
@@ -184,11 +184,11 @@ fun HomeScreen(
                     )
                     GridTile(
                         modifier = Modifier.weight(1f).height(130.dp),
-                        icon = Icons.Default.MonitorHeart,
-                        iconColor = NavyPrimary,
-                        label = "Daily Test",
+                        icon = Icons.Default.Keyboard,
+                        iconColor = TextDark,
+                        label = "Adaptive\nKeyboard",
                         showGreenDot = false,
-                        onClick = onNavigateToDailyTest,
+                        onClick = onNavigateToKeyboardSetup,
                         touchStabilizerEnabled = touchStabilizerEnabled
                     )
                 }
@@ -216,7 +216,7 @@ private fun HeaderSection() {
 
     Column {
         Text(
-            text = "Good morning,",
+            text = "Good morning",
             fontSize = 24.sp,
             fontWeight = FontWeight.Medium,
             fontFamily = FontFamily.Serif,
@@ -487,7 +487,7 @@ private fun HistoryRow(onClick: () -> Unit, touchStabilizerEnabled: Boolean) {
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Your last 7 tests",
+                    text = "Your last tests",
                     fontSize = 18.sp,
                     color = TextGray
                 )
