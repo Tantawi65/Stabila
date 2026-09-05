@@ -97,7 +97,10 @@ fun StabilaApp() {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        bottomBar = {
+            com.stabila.app.ui.components.StabilaBottomBar(navController = navController)
+        }
     ) { innerPadding ->
         StabilaNavHost(
             navController = navController,

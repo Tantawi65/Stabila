@@ -401,62 +401,66 @@ private fun GridTile(
 
 @Composable
 private fun HistoryRow(onClick: () -> Unit, touchStabilizerEnabled: Boolean) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .drawBehind {
-                drawLine(
-                    color = TextDark,
-                    start = androidx.compose.ui.geometry.Offset(0f, 0f),
-                    end = androidx.compose.ui.geometry.Offset(size.width, 0f),
-                    strokeWidth = 1.dp.toPx()
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // Top border
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(TextDark)
+        )
+        
+        Spacer(Modifier.height(24.dp))
+        
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .stabilizedClick(enabled = touchStabilizerEnabled, onClick = onClick)
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "History",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = FontFamily.Serif,
+                    color = TextDark
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "Your last 7 tests",
+                    fontSize = 18.sp,
+                    color = TextGray
                 )
             }
-            .stabilizedClick(enabled = touchStabilizerEnabled, onClick = onClick)
-            .padding(top = 24.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "History",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium,
-                fontFamily = FontFamily.Serif,
-                color = TextDark
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = "Your last 7 tests",
-                fontSize = 18.sp,
-                color = TextGray
-            )
-        }
 
-        // Sparkline
-        val pts = listOf(0.8f, 0.65f, 0.75f, 0.5f, 0.4f, 0.2f, 0.1f)
-        Canvas(modifier = Modifier.width(80.dp).height(32.dp)) {
-            val w = size.width
-            val h = size.height
-            val step = w / (pts.size - 1)
-            val path = Path()
-            pts.forEachIndexed { i, v ->
-                val x = i * step
-                val y = v * h
-                if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+            // Sparkline
+            val pts = listOf(0.8f, 0.65f, 0.75f, 0.5f, 0.4f, 0.2f, 0.1f)
+            Canvas(modifier = Modifier.width(80.dp).height(32.dp)) {
+                val w = size.width
+                val h = size.height
+                val step = w / (pts.size - 1)
+                val path = Path()
+                pts.forEachIndexed { i, v ->
+                    val x = i * step
+                    val y = v * h
+                    if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                }
+                drawPath(
+                    path = path,
+                    color = NavyPrimary,
+                    style = Stroke(width = 2.5f.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                )
             }
-            drawPath(
-                path = path,
-                color = NavyPrimary,
-                style = Stroke(width = 2.5f.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+
+            Spacer(Modifier.width(12.dp))
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = TextGray,
+                modifier = Modifier.size(20.dp)
             )
         }
-
-        Spacer(Modifier.width(12.dp))
-        Icon(
-            imageVector = Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = TextGray,
-            modifier = Modifier.size(20.dp)
-        )
     }
 }
