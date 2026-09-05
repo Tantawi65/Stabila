@@ -39,7 +39,7 @@
     <string name="test_title">Daily Tremor Test</string>
     <string name="test_type_action">Action</string>
     <string name="test_type_spiral">Spiral</string>
-    <string name="test_action_desc">Hold the phone naturally and stay as relaxed as you can.\nThe test runs for 20 seconds.</string>
+    <string name="test_action_desc">Hold the phone naturally and stay as relaxed as you can. The test runs for 20 seconds.</string>
     <string name="test_spiral_desc">Trace the spiral on the screen using your finger. Try to stay within the lines.</string>
     <string name="test_medication_title">Medication Status (Optional)</string>
     <string name="test_medication_none">None</string>

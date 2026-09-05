@@ -248,10 +248,10 @@ fun AdvancedTestCard(
     val borderColor by animateColorAsState(if (selected) NavyPrimary else TextDark.copy(alpha = 0.06f))
     
     // Adapt sizes based on tremor mode
-    val cardPadding = if (adaptive.isHighTremorMode) 24.dp else 16.dp
-    val iconBoxSize = if (adaptive.isHighTremorMode) 56.dp else 48.dp
-    val iconSize = if (adaptive.isHighTremorMode) 28.dp else 24.dp
-    val cardMinHeight = if (adaptive.isHighTremorMode) 120.dp else 80.dp
+    val cardPadding = if (adaptive.isHighTremorMode) 20.dp else 16.dp
+    val iconBoxSize = if (adaptive.isHighTremorMode) 52.dp else 48.dp
+    val iconSize = if (adaptive.isHighTremorMode) 26.dp else 24.dp
+    val cardMinHeight = if (adaptive.isHighTremorMode) 100.dp else 80.dp
     
     Box(
         modifier = Modifier
@@ -294,7 +294,7 @@ fun AdvancedTestCard(
 @Composable
 fun AnimatedMedicationSelector(selectedTag: String?, onSelect: (String?) -> Unit) {
     val adaptive = LocalAdaptiveParams.current
-    val selectorHeight = if (adaptive.isHighTremorMode) 72.dp else 56.dp
+    val selectorHeight = if (adaptive.isHighTremorMode) 64.dp else 56.dp
 
     Box(
         modifier = Modifier
