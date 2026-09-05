@@ -114,7 +114,7 @@ fun HomeScreen(
         if (adaptive.isHighTremorMode) {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 GridTile(
-                    modifier = Modifier.fillMaxWidth().height(adaptive.buttonHeight),
+                    modifier = Modifier.fillMaxWidth().height(130.dp),
                     icon = Icons.Default.TouchApp,
                     iconColor = TextDark,
                     label = "Touch Stabilizer",
@@ -123,7 +123,7 @@ fun HomeScreen(
                     touchStabilizerEnabled = touchStabilizerEnabled
                 )
                 GridTile(
-                    modifier = Modifier.fillMaxWidth().height(adaptive.buttonHeight),
+                    modifier = Modifier.fillMaxWidth().height(130.dp),
                     icon = Icons.Default.Keyboard,
                     iconColor = TextDark,
                     label = "Adaptive Keyboard",
@@ -132,7 +132,7 @@ fun HomeScreen(
                     touchStabilizerEnabled = touchStabilizerEnabled
                 )
                 GridTile(
-                    modifier = Modifier.fillMaxWidth().height(adaptive.buttonHeight),
+                    modifier = Modifier.fillMaxWidth().height(130.dp),
                     icon = Icons.Default.KeyboardArrowDown,
                     iconColor = TextDark,
                     label = "Auto-Scroll",
@@ -141,7 +141,7 @@ fun HomeScreen(
                     touchStabilizerEnabled = touchStabilizerEnabled
                 )
                 GridTile(
-                    modifier = Modifier.fillMaxWidth().height(adaptive.buttonHeight),
+                    modifier = Modifier.fillMaxWidth().height(130.dp),
                     icon = Icons.Default.MonitorHeart,
                     iconColor = NavyPrimary,
                     label = "Daily Test",
@@ -216,7 +216,7 @@ private fun HeaderSection() {
 
     Column {
         Text(
-            text = "Good morning, Mohamed",
+            text = "Good morning,",
             fontSize = 24.sp,
             fontWeight = FontWeight.Medium,
             fontFamily = FontFamily.Serif,
@@ -292,21 +292,26 @@ private fun ScoreRingCard(score: Float) {
                 )
 
                 Row(verticalAlignment = Alignment.Bottom) {
-                    val scoreFontSize = if (displayScore >= 100f) 46.sp else 60.sp
+                    val scoreFontSize = if (displayScore >= 100f) 40.sp else 60.sp
+                    val suffixFontSize = if (displayScore >= 100f) 16.sp else 20.sp
                     Text(
                         text = "${displayScore.toInt()}",
                         fontSize = scoreFontSize,
                         fontWeight = FontWeight.Medium,
                         fontFamily = FontFamily.Serif,
                         color = TextDark,
-                        lineHeight = scoreFontSize
+                        lineHeight = scoreFontSize,
+                        maxLines = 1,
+                        softWrap = false
                     )
                     Text(
                         text = "/100",
-                        fontSize = 20.sp,
+                        fontSize = suffixFontSize,
                         fontFamily = FontFamily.Serif,
                         color = TextGray,
-                        modifier = Modifier.padding(start = 4.dp, bottom = if (displayScore >= 100f) 2.dp else 6.dp)
+                        maxLines = 1,
+                        softWrap = false,
+                        modifier = Modifier.padding(start = 4.dp, bottom = if (displayScore >= 100f) 4.dp else 6.dp)
                     )
                 }
             }
