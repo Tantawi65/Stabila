@@ -57,7 +57,6 @@ fun StabilaBottomBar(
 ) {
     val items = listOf(
         NavItem(Screen.Home.route, "Home", Icons.Default.Home),
-        NavItem(Screen.Camera.route, "Camera", Icons.Default.CameraAlt),
         NavItem(Screen.Settings.route, "Settings", Icons.Default.Settings)
     )
 
@@ -66,12 +65,12 @@ fun StabilaBottomBar(
 
     // Ensure we only show on the main top-level routes
     val topLevelRoutes = listOf(Screen.Home.route, Screen.DailyTest.route, Screen.History.route, Screen.Settings.route)
-    if (currentRoute !in topLevelRoutes && currentRoute != Screen.Camera.route) return
+    if (currentRoute !in topLevelRoutes) return
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(64.dp)
+            .height(76.dp)
             .background(BgCard)
             .drawBehind {
                 drawLine(
@@ -87,16 +86,15 @@ fun StabilaBottomBar(
     ) {
         items.forEach { item ->
             val isSelected = currentRoute == item.route
-            // In the React design, if we are not on Camera or Settings exactly, Home should appear active if it's the root.
-            // But since Stabila uses DailyTest/History in Home, we'll keep Home active if on those.
+            // Keep Home active if on DailyTest/History sub-screens
             val isActive = isSelected || (item.route == Screen.Home.route && currentRoute in listOf(Screen.DailyTest.route, Screen.History.route))
             
             val iconColor = if (isActive) PrimaryColor else MutedForeground
 
             Box(
                 modifier = Modifier
-                    .size(width = 72.dp, height = 56.dp)
-                    .clip(RoundedCornerShape(28.dp))
+                    .size(width = 80.dp, height = 64.dp)
+                    .clip(RoundedCornerShape(32.dp))
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
@@ -113,13 +111,15 @@ fun StabilaBottomBar(
                     },
                 contentAlignment = Alignment.Center
             ) {
+                val adaptive = com.stabila.core.ui.LocalAdaptiveParams.current
+                
                 // Background pill for active item
                 if (isActive) {
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopCenter)
-                            .size(width = 56.dp, height = 36.dp)
-                            .background(PrimaryLight, RoundedCornerShape(18.dp))
+                            .size(width = 64.dp, height = 40.dp)
+                            .background(PrimaryLight, RoundedCornerShape(20.dp))
                     )
                 }
                 
@@ -131,12 +131,12 @@ fun StabilaBottomBar(
                         imageVector = item.icon,
                         contentDescription = item.title,
                         tint = iconColor,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(26.dp * adaptive.fontScale)
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = item.title,
-                        fontSize = 13.sp,
+                        fontSize = 14.sp * adaptive.fontScale,
                         fontWeight = FontWeight.Medium,
                         color = iconColor,
                         letterSpacing = 0.5.sp

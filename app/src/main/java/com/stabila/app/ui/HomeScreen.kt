@@ -51,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.stabila.core.ui.LocalAdaptiveParams
 import com.stabila.core.ui.stabilizedClick
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -166,6 +167,7 @@ fun HomeScreen(
 
 @Composable
 private fun HeaderSection() {
+    val adaptive = LocalAdaptiveParams.current
     val dateText = try {
         val date = LocalDate.now()
         date.format(DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.ENGLISH)).uppercase()
@@ -174,16 +176,16 @@ private fun HeaderSection() {
     Column {
         Text(
             text = "Good morning, Mohamed",
-            fontSize = 24.sp,
+            fontSize = 24.sp * adaptive.fontScale,
             fontWeight = FontWeight.Medium,
             fontFamily = FontFamily.Serif,
             color = TextDark,
-            lineHeight = 32.sp
+            lineHeight = 32.sp * adaptive.fontScale
         )
         Spacer(Modifier.height(4.dp))
         Text(
             text = dateText,
-            fontSize = 12.sp,
+            fontSize = 12.sp * adaptive.fontScale,
             fontWeight = FontWeight.Medium,
             color = TextGray,
             letterSpacing = 1.2.sp
@@ -193,6 +195,7 @@ private fun HeaderSection() {
 
 @Composable
 private fun ScoreRingCard(score: Float) {
+    val adaptive = LocalAdaptiveParams.current
     val displayScore = if (score >= 0f) score else 78f // fallback for design demo
     val animatedProgress by animateFloatAsState(
         targetValue = (displayScore / 100f).coerceIn(0f, 1f),
@@ -249,20 +252,21 @@ private fun ScoreRingCard(score: Float) {
                 )
 
                 Row(verticalAlignment = Alignment.Bottom) {
+                    val scoreFontSize = if (displayScore >= 100f) 52.sp else 60.sp
                     Text(
                         text = "${displayScore.toInt()}",
-                        fontSize = 60.sp,
+                        fontSize = scoreFontSize * adaptive.fontScale,
                         fontWeight = FontWeight.Medium,
                         fontFamily = FontFamily.Serif,
                         color = TextDark,
-                        lineHeight = 60.sp
+                        lineHeight = scoreFontSize * adaptive.fontScale
                     )
                     Text(
                         text = "/100",
-                        fontSize = 20.sp,
+                        fontSize = 20.sp * adaptive.fontScale,
                         fontFamily = FontFamily.Serif,
                         color = TextGray,
-                        modifier = Modifier.padding(start = 4.dp)
+                        modifier = Modifier.padding(start = 4.dp, bottom = if (displayScore >= 100f) 2.dp else 6.dp)
                     )
                 }
             }
@@ -271,24 +275,34 @@ private fun ScoreRingCard(score: Float) {
 
             Text(
                 text = "Today's Steadiness",
-                fontSize = 18.sp,
+                fontSize = 18.sp * adaptive.fontScale,
                 fontWeight = FontWeight.Medium,
                 color = TextDark
             )
 
             Spacer(Modifier.height(8.dp))
 
+            val statusText = if (score >= 0f) {
+                when {
+                    score < 30f -> "Stable — excellent day"
+                    score < 65f -> "Mild tremor detected"
+                    else        -> "High tremor — take it easy"
+                }
+            } else "Take your daily test"
+
+            val statusIcon = if (score >= 65f) Icons.Default.MonitorHeart else Icons.Default.TrendingUp
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.Default.TrendingUp,
+                    imageVector = statusIcon,
                     contentDescription = null,
                     tint = GreenAccent,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(Modifier.width(4.dp))
                 Text(
-                    text = "Steadier than yesterday",
-                    fontSize = 18.sp,
+                    text = statusText,
+                    fontSize = 16.sp * adaptive.fontScale,
                     fontWeight = FontWeight.Medium,
                     color = GreenAccent
                 )
@@ -299,6 +313,7 @@ private fun ScoreRingCard(score: Float) {
 
 @Composable
 private fun SteadyCamCard(onClick: () -> Unit, touchStabilizerEnabled: Boolean) {
+    val adaptive = LocalAdaptiveParams.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -329,7 +344,7 @@ private fun SteadyCamCard(onClick: () -> Unit, touchStabilizerEnabled: Boolean) 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "SteadyCam",
-                fontSize = 24.sp,
+                fontSize = 24.sp * adaptive.fontScale,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Serif,
                 color = CardWhite
@@ -337,9 +352,9 @@ private fun SteadyCamCard(onClick: () -> Unit, touchStabilizerEnabled: Boolean) 
             Spacer(Modifier.height(4.dp))
             Text(
                 text = "Stabilized camera for steady, blur-free photos",
-                fontSize = 18.sp,
+                fontSize = 18.sp * adaptive.fontScale,
                 color = CardWhite.copy(alpha = 0.85f),
-                lineHeight = 24.sp
+                lineHeight = 24.sp * adaptive.fontScale
             )
         }
     }
@@ -355,6 +370,7 @@ private fun GridTile(
     onClick: () -> Unit,
     touchStabilizerEnabled: Boolean
 ) {
+    val adaptive = LocalAdaptiveParams.current
     Box(
         modifier = modifier
             .height(130.dp)
@@ -389,11 +405,11 @@ private fun GridTile(
             Spacer(Modifier.height(8.dp))
             Text(
                 text = label,
-                fontSize = 18.sp,
+                fontSize = 18.sp * adaptive.fontScale,
                 fontWeight = FontWeight.Medium,
                 color = TextDark,
                 textAlign = TextAlign.Center,
-                lineHeight = 24.sp
+                lineHeight = 24.sp * adaptive.fontScale
             )
         }
     }
@@ -401,6 +417,7 @@ private fun GridTile(
 
 @Composable
 private fun HistoryRow(onClick: () -> Unit, touchStabilizerEnabled: Boolean) {
+    val adaptive = LocalAdaptiveParams.current
     Column(modifier = Modifier.fillMaxWidth()) {
         // Top border
         Box(
@@ -422,7 +439,7 @@ private fun HistoryRow(onClick: () -> Unit, touchStabilizerEnabled: Boolean) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "History",
-                    fontSize = 20.sp,
+                    fontSize = 20.sp * adaptive.fontScale,
                     fontWeight = FontWeight.Medium,
                     fontFamily = FontFamily.Serif,
                     color = TextDark
@@ -430,7 +447,7 @@ private fun HistoryRow(onClick: () -> Unit, touchStabilizerEnabled: Boolean) {
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = "Your last 7 tests",
-                    fontSize = 18.sp,
+                    fontSize = 18.sp * adaptive.fontScale,
                     color = TextGray
                 )
             }
