@@ -135,6 +135,8 @@
     <string name="keyboard_setup_desc">To use the Stabila keyboard in other apps (like Messages or Browser), you need to enable it in your Android System Settings.</string>
     <string name="keyboard_enable_button">Enable in Settings</string>
     <string name="keyboard_post_enable_note">After enabling, tap the keyboard icon in your navigation bar when typing to switch to the Stabila Keyboard.</string>
+    <string name="keyboard_cancel_tap">Cancel (Tap here)</string>
+    <string name="keyboard_tap_to_cancel">Tap to Cancel</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">Settings</string>

@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="app_name">ستابيلا</string>
+    <string name="app_tagline">تكنولوجيا تتحرك معك.</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_daily_test">الاختبار</string>
+    <string name="nav_camera">الكاميرا</string>
+    <string name="nav_history">السجل</string>
+    <string name="nav_settings">الإعدادات</string>
+
+    <!-- Home Screen -->
+    <string name="home_elevated_banner">يوم رعشة مرتفعة — تم تفعيل عناصر تحكم أكبر</string>
+    <string name="home_severe_banner">يوم رعشة حادة — تم تفعيل وضع إمكانية الوصول</string>
+    <string name="home_score_empty">لا توجد اختبارات بعد — أجرِ أول اختبار</string>
+    <string name="home_score_stable">يوم مستقر — أداؤك ممتاز</string>
+    <string name="home_score_mild">رعشة خفيفة — تفاوت طبيعي</string>
+    <string name="home_score_high">رعشة مرتفعة — استشر طبيبك إذا استمرت</string>
+    <string name="home_score_latest_label">نتيجة آخر اختبار</string>
+    <string name="home_quick_actions">إجراءات سريعة</string>
+    <string name="home_action_test_title">الاختبار اليومي</string>
+    <string name="home_action_test_subtitle">فحص مستوى الرعشة</string>
+    <string name="home_action_camera_title">الكاميرا الثابتة</string>
+    <string name="home_action_camera_subtitle">صور بدون اهتزاز</string>
+    <string name="home_action_history_title">السجل</string>
+    <string name="home_action_history_subtitle">النتائج السابقة وتقارير PDF</string>
+    <string name="home_action_autoscroll_title">التمرير التلقائي</string>
+    <string name="home_action_autoscroll_subtitle">التحكم في التمرير</string>
+    <string name="home_action_keyboard_title">لوحة المفاتيح التكيفية</string>
+    <string name="home_action_keyboard_subtitle">إعداد وتفعيل اللوحة</string>
+    <string name="home_action_stabilizer_title">مثبت اللمس</string>
+    <string name="home_action_stabilizer_subtitle">تصفية ذكية للنقرات</string>
+    <string name="home_action_settings_title">الإعدادات</string>
+    <string name="home_action_settings_subtitle">تفضيلات التطبيق</string>
+
+    <!-- Daily Test Screen -->
+    <string name="test_title">اختبار الرعشة اليومي</string>
+    <string name="test_type_action">حركي</string>
+    <string name="test_type_spiral">حلزوني</string>
+    <string name="test_action_desc">أمسك الهاتف بشكل طبيعي واسترح قدر الإمكان.\nيستغرق الاختبار 20 ثانية.</string>
+    <string name="test_spiral_desc">تتبع الشكل الحلزوني على الشاشة بإصبعك. حاول البقاء داخل المسار.</string>
+    <string name="test_medication_title">حالة تناول الدواء (اختياري)</string>
+    <string name="test_medication_none">بدون</string>
+    <string name="test_medication_pre">قبل الجرعة</string>
+    <string name="test_medication_post">بعد الجرعة</string>
+    <string name="test_start_button">بدء الاختبار</string>
+    <string name="test_get_ready">استعد</string>
+    <string name="test_measuring_in">يبدأ القياس خلال…</string>
+    <string name="test_measuring">جارٍ القياس…</string>
+    <string name="test_measuring_hint">أمسك الهاتف بطبيعية دون شد عضلاتك.</string>
+    <string name="test_analysing">جارٍ تحليل بياناتك…</string>
+    <string name="test_essential_tremor">نمط الرعاش الأساسي (ET)</string>
+    <string name="test_parkinsons">نمط رعاش باركنسون</string>
+    <string name="test_normal">نمط طبيعي</string>
+    <string name="test_res_stable">ممتاز — ثبات عالٍ جداً</string>
+    <string name="test_res_mild">تم رصد رعشة خفيفة</string>
+    <string name="test_res_high">رعشة مرتفعة اليوم</string>
+    <string name="test_dominant_freq">التردد السائد</string>
+    <string name="test_amplitude">السعة</string>
+    <string name="test_done">تم</string>
+    <string name="test_retake">إعادة الاختبار</string>
+    <string name="test_trace_spiral_title">تتبع الشكل الحلزوني</string>
+    <string name="test_trace_spiral_hint">استخدم إصبعك لتتبع الخط الخفيف.</string>
+    <string name="test_finish_tracing">إنهاء التتبع</string>
+
+    <!-- Camera / SteadyCam Screen -->
+    <string name="camera_permission_required">مطلوب إذن الوصول إلى الكاميرا</string>
+    <string name="camera_photo_saved_toast">📷 تم حفظ الصورة في المعرض ← Pictures/Stabila</string>
+    <string name="camera_saved_banner">✓ تم الحفظ في المعرض</string>
+    <string name="camera_original_label">الأصلية (مشوشة)</string>
+    <string name="camera_enhanced_label">المحسنة (المثبتة)</string>
+    <string name="camera_high_light">☀ إضاءة عالية</string>
+    <string name="camera_compare_on">المقارنة مفعلة</string>
+    <string name="camera_compare">مقارنة</string>
+    <string name="camera_analysing_frames">جارٍ تحليل الإطارات…</string>
+    <string name="camera_enhancing">جارٍ التحسين…</string>
+    <string name="camera_brightness">السطوع</string>
+    <string name="camera_texture">تفاصيل دقيقة</string>
+    <string name="camera_smooth">نعومة</string>
+
+    <!-- History Screen -->
+    <string name="history_title">السجل</string>
+    <string name="history_filter_all">الكل</string>
+    <string name="history_filter_action">حركي</string>
+    <string name="history_filter_spiral">حلزوني</string>
+    <string name="history_empty">لا توجد قراءات سابقة.</string>
+    <string name="history_download_pdf">تحميل تقرير PDF</string>
+    <string name="history_generating_pdf">جارٍ إنشاء التقرير…</string>
+    <string name="history_recent_tests">الاختبارات الأخيرة</string>
+    <string name="history_test_suffix">اختبار %s</string>
+
+    <!-- Auto-Scroll Screen -->
+    <string name="autoscroll_setup_title">إعداد التمرير التلقائي</string>
+    <string name="autoscroll_is_on">التمرير التلقائي مفعّل</string>
+    <string name="autoscroll_is_off">التمرير التلقائي متوقف</string>
+    <string name="autoscroll_master_desc">المفتاح الرئيسي لتفعيل أو تعطيل الميزة كلياً.</string>
+    <string name="autoscroll_permissions_title">الأذونات</string>
+    <string name="autoscroll_enable_service_title">تفعيل خدمة التمرير التلقائي</string>
+    <string name="autoscroll_enable_service_desc">انتقل إلى التطبيقات المثبتة ← Stabila وقم بتفعيلها.</string>
+    <string name="autoscroll_restricted_desc">أندرويد 13+: إذا كان الخيار معطلاً، انتقل أولاً إلى معلومات تطبيق Stabila ← \'السماح بالإعدادات المقيدة\'</string>
+    <string name="autoscroll_overlay_title">السماح بالظهور فوق التطبيقات الأخرى</string>
+    <string name="autoscroll_overlay_desc">مطلوب لظهور زر التحكم العائم</string>
+    <string name="autoscroll_speed_title">سرعة التمرير التلقائي</string>
+    <string name="autoscroll_speed_desc">سرعات محددة مسبقاً ومصممة خصيصاً لمستخدمي الرعشة.</string>
+    <string name="autoscroll_target_apps_title">التطبيقات المستهدفة</string>
+    <string name="autoscroll_enable_globally_title">تفعيل في كل التطبيقات</string>
+    <string name="autoscroll_enable_globally_desc">يعمل التمرير التلقائي في جميع التطبيقات.</string>
+    <string name="autoscroll_select_specific_apps">تحديد تطبيقات مخصصة</string>
+    <string name="autoscroll_none">لا يوجد</string>
+    <string name="autoscroll_selected_count">تم اختيار %d</string>
+    <string name="autoscroll_select_dialog_title">اختر تطبيقات للتمرير التلقائي</string>
+
+    <!-- Touch Stabilizer Screen -->
+    <string name="stabilizer_title">مثبت اللمس</string>
+    <string name="stabilizer_global_title">مثبت اللمس الشامل</string>
+    <string name="stabilizer_desc">يقوم مثبت اللمس باعتراض لمساتك في أي مكان على الهاتف وتصفية اهتزازات الرعشة ليمنحك نقرة دقيقة ونظيفة. نظراً لاختلاف درجة الرعشة من شخص لآخر، نحتاج إلى معايرتها لتناسب أصابعك.</string>
+    <string name="stabilizer_enable_system">تفعيل على مستوى النظام</string>
+    <string name="stabilizer_require_accessibility">يتطلب إذن إمكانية الوصول.</string>
+    <string name="stabilizer_please_enable_service">يرجى تفعيل خدمة إمكانية الوصول لتطبيق Stabila</string>
+    <string name="stabilizer_please_allow_overlay">يرجى السماح بالظهور فوق التطبيقات الأخرى</string>
+    <string name="stabilizer_advanced_calib">المعايرة المتقدمة</string>
+    <string name="stabilizer_calib_desc">سنقوم بقياس نمط لمسك الطبيعي، بما في ذلك نطاق الاهتزاز ومدة اللمسة وميل الارتداد.</string>
+    <string name="stabilizer_start_analysis">بدء التحليل</string>
+    <string name="stabilizer_analysis_complete">اكتمل التحليل بنجاح!</string>
+    <string name="stabilizer_jitter_radius">نصف قطر الاهتزاز</string>
+    <string name="stabilizer_avg_duration">متوسط المدة</string>
+    <string name="stabilizer_recalibrate">إعادة المعايرة</string>
+    <string name="stabilizer_tap_dot_prompt">المس النقطة بشكل طبيعي (%1$d/%2$d)</string>
+
+    <!-- Keyboard Setup Screen -->
+    <string name="keyboard_setup_title">إعداد لوحة المفاتيح</string>
+    <string name="keyboard_adaptive_title">لوحة المفاتيح التكيفية للرعشة</string>
+    <string name="keyboard_setup_desc">لاستخدام لوحة مفاتيح Stabila في التطبيقات الأخرى (مثل الرسائل والمتصفح)، يلزمك تفعيلها من إعدادات نظام أندرويد.</string>
+    <string name="keyboard_enable_button">تفعيل في الإعدادات</string>
+    <string name="keyboard_post_enable_note">بعد التفعيل، اضغط على أيقونة لوحة المفاتيح في شريط التنقل أثناء الكتابة للتبديل إلى لوحة Stabila.</string>
+    <string name="keyboard_cancel_tap">إلغاء (المس هنا)</string>
+    <string name="keyboard_tap_to_cancel">المس للإلغاء</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_language_title">لغة التطبيق</string>
+    <string name="settings_language_system">النظام</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_language_ar">العربية</string>
+    <string name="settings_theme_title">مظهر التطبيق</string>
+    <string name="settings_theme_system">النظام</string>
+    <string name="settings_theme_light">فاتح</string>
+    <string name="settings_theme_dark">داكن</string>
+    <string name="settings_reminders_title">التنبيهات اليومية</string>
+    <string name="settings_reminders_desc">استلام إشعارات تذكيرية لإجراء اختبار الرعشة اليومي.</string>
+    <string name="settings_reminder_time">وقت التذكير</string>
+
+    <!-- Generic & Dialogs -->
+    <string name="generic_cancel">إلغاء</string>
+    <string name="generic_save">حفظ</string>
+    <string name="generic_back">رجوع</string>
+    <string name="generic_loading">جارٍ التحميل…</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">اختبار الرعشة اليومي</string>
+    <string name="notification_channel_desc">تذكيرات لإجراء اختبار الرعشة اليومي</string>
+    <string name="notification_reminder_title">اختبار الرعشة اليومي</string>
+    <string name="notification_reminder_body">حان وقت إجراء اختبار الرعشة اليومي لمتابعة تقدمك.</string>
+
+    <!-- PDF Report -->
+    <string name="pdf_report_title">تقرير ستابيلا السريري</string>
+    <string name="pdf_generated_on">تاريخ الإنشاء: %s</string>
+    <string name="pdf_total_readings">إجمالي القراءات: %d</string>
+    <string name="pdf_average_score">متوسط النتيجة: %s/100</string>
+
+    <!-- Services -->
+    <string name="accessibility_service_description">يوفر التمرير التلقائي وتحسينات إمكانية الوصول للأشخاص الذين يعانون من الرعشة.</string>
+    <string name="touch_stabilizer_desc">يعمل على تثبيت إدخال اللمس عن طريق تصفية ضوضاء الرعشة لمنع النقرات الخاطئة.</string>
+</resources>

@@ -37,12 +37,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.ui.res.stringResource
+import com.stabila.app.R
 import com.stabila.app.navigation.Screen
 import com.stabila.core.ui.LocalAdaptiveParams
 
 private data class NavItem(
     val route: String,
-    val title: String,
+    val titleRes: Int,
     val icon: ImageVector
 )
 
@@ -52,10 +54,10 @@ fun StabilaBottomBar(
     modifier: Modifier = Modifier
 ) {
     val items = listOf(
-        NavItem(Screen.Home.route, "Home", Icons.Default.Home),
-        NavItem(Screen.DailyTest.route, "Test", Icons.Default.MonitorHeart),
-        NavItem(Screen.History.route, "History", Icons.Default.History),
-        NavItem(Screen.Settings.route, "Settings", Icons.Default.Settings)
+        NavItem(Screen.Home.route, R.string.nav_home, Icons.Default.Home),
+        NavItem(Screen.DailyTest.route, R.string.nav_daily_test, Icons.Default.MonitorHeart),
+        NavItem(Screen.History.route, R.string.nav_history, Icons.Default.History),
+        NavItem(Screen.Settings.route, R.string.nav_settings, Icons.Default.Settings)
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -89,6 +91,7 @@ fun StabilaBottomBar(
         ) {
             items.forEach { item ->
                 val isSelected = currentRoute == item.route
+                val title = stringResource(item.titleRes)
 
                 val backgroundColor by animateColorAsState(
                     targetValue = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent,
@@ -121,14 +124,14 @@ fun StabilaBottomBar(
                 ) {
                     Icon(
                         imageVector = item.icon,
-                        contentDescription = item.title,
+                        contentDescription = title,
                         tint = contentColor,
                         modifier = Modifier.size(22.dp)
                     )
                     if (isSelected) {
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            text = item.title,
+                            text = title,
                             style = MaterialTheme.typography.labelMedium.copy(
                                 fontSize = (13 * adaptive.fontScale).sp,
                                 fontWeight = FontWeight.Bold

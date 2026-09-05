@@ -65,6 +65,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+import androidx.compose.ui.res.stringResource
+import com.stabila.core.R
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.stabila.core.domain.TestType
@@ -152,14 +154,14 @@ private fun IdleContent(
         ) {
             Icon(
                 imageVector = Icons.Default.CheckCircle,
-                contentDescription = "Ready for test",
+                contentDescription = stringResource(R.string.test_title),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(48.dp)
             )
         }
         Spacer(Modifier.height(32.dp))
         Text(
-            text = "Daily Tremor Test",
+            text = stringResource(R.string.test_title),
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Center,
@@ -184,7 +186,7 @@ private fun IdleContent(
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Action", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Text(stringResource(R.string.test_type_action), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
             }
 
             Box(
@@ -196,15 +198,15 @@ private fun IdleContent(
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Spiral", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Text(stringResource(R.string.test_type_spiral), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
             }
         }
         
         Spacer(Modifier.height(16.dp))
         Text(
             text = when (selectedType) {
-                TestType.ACTION -> "Hold the phone naturally and stay as relaxed as you can.\nThe test runs for 20 seconds."
-                TestType.SPIRAL -> "Trace the spiral on the screen using your finger. Try to stay within the lines."
+                TestType.ACTION -> stringResource(R.string.test_action_desc)
+                TestType.SPIRAL -> stringResource(R.string.test_spiral_desc)
             },
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -215,7 +217,7 @@ private fun IdleContent(
         
         // Medication Toggle
         Text(
-            text = "Medication Status (Optional)",
+            text = stringResource(R.string.test_medication_title),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -227,7 +229,11 @@ private fun IdleContent(
                 .background(MaterialTheme.colorScheme.surface),
             horizontalArrangement = Arrangement.Center
         ) {
-            listOf(null to "None", "pre-dose" to "Pre-Dose", "post-dose" to "Post-Dose").forEach { (tag, label) ->
+            listOf(
+                null to stringResource(R.string.test_medication_none),
+                "pre-dose" to stringResource(R.string.test_medication_pre),
+                "post-dose" to stringResource(R.string.test_medication_post)
+            ).forEach { (tag, label) ->
                 val isSelected = medicationTag == tag
                 Box(
                     modifier = Modifier
@@ -250,7 +256,7 @@ private fun IdleContent(
         
         Spacer(Modifier.height(32.dp))
         StabilaPrimaryButton(
-            text = "Start Test",
+            text = stringResource(R.string.test_start_button),
             onClick = { onStart(selectedType) },
             modifier = Modifier.fillMaxWidth()
         )
@@ -272,7 +278,7 @@ private fun CountdownContent(seconds: Int) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Get Ready",
+            text = stringResource(R.string.test_get_ready),
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -285,7 +291,7 @@ private fun CountdownContent(seconds: Int) {
         )
         Spacer(Modifier.height(12.dp))
         Text(
-            text = "Measuring in...",
+            text = stringResource(R.string.test_measuring_in),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -311,14 +317,14 @@ private fun RecordingContent(progress: Float, magnitude: Float, testType: TestTy
         Column(horizontalAlignment = Alignment.Start) {
             Spacer(Modifier.height(16.dp))
             Text(
-                text = "Measuring…",
+                text = stringResource(R.string.test_measuring),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "Hold the phone naturally. Don't tense up.",
+                text = stringResource(R.string.test_measuring_hint),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -376,7 +382,7 @@ private fun ProcessingContent() {
         )
         Spacer(Modifier.height(24.dp))
         Text(
-            text = "Analysing your data…",
+            text = stringResource(R.string.test_analysing),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -438,9 +444,9 @@ private fun ResultContent(
         
         if (result?.classification != null && result.classification != com.stabila.core.domain.TremorClassification.UNCLASSIFIED) {
             val title = when (result.classification) {
-                com.stabila.core.domain.TremorClassification.ESSENTIAL_TREMOR -> "Essential Tremor Signature"
-                com.stabila.core.domain.TremorClassification.PARKINSONS -> "Parkinson's Signature"
-                com.stabila.core.domain.TremorClassification.NORMAL -> "Normal Signature"
+                com.stabila.core.domain.TremorClassification.ESSENTIAL_TREMOR -> stringResource(R.string.test_essential_tremor)
+                com.stabila.core.domain.TremorClassification.PARKINSONS -> stringResource(R.string.test_parkinsons)
+                com.stabila.core.domain.TremorClassification.NORMAL -> stringResource(R.string.test_normal)
                 else -> ""
             }
             Text(
@@ -452,9 +458,9 @@ private fun ResultContent(
         } else {
             Text(
                 text = when {
-                    (result?.overallScore ?: 0f) < 30f -> "Great — very stable"
-                    (result?.overallScore ?: 0f) < 65f -> "Mild tremor detected"
-                    else                                -> "High tremor today"
+                    (result?.overallScore ?: 0f) < 30f -> stringResource(R.string.test_res_stable)
+                    (result?.overallScore ?: 0f) < 65f -> stringResource(R.string.test_res_mild)
+                    else                                -> stringResource(R.string.test_res_high)
                 },
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onBackground
@@ -469,12 +475,12 @@ private fun ResultContent(
             modifier = Modifier.fillMaxWidth()
         ) {
             DetailCard(
-                label = "Dominant Freq.",
+                label = stringResource(R.string.test_dominant_freq),
                 value = "${String.format("%.1f", result?.dominantFrequencyHz ?: 0f)} Hz",
                 modifier = Modifier.weight(1f)
             )
             DetailCard(
-                label = "Amplitude",
+                label = stringResource(R.string.test_amplitude),
                 value = "${String.format("%.3f", result?.amplitude ?: 0f)}",
                 modifier = Modifier.weight(1f)
             )
@@ -483,13 +489,13 @@ private fun ResultContent(
         Spacer(Modifier.height(40.dp))
 
         StabilaPrimaryButton(
-            text = "Done",
+            text = stringResource(R.string.test_done),
             onClick = onDone,
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(12.dp))
         StabilaSecondaryButton(
-            text = "Retake Test",
+            text = stringResource(R.string.test_retake),
             onClick = onRetake,
             modifier = Modifier.fillMaxWidth()
         )
@@ -526,8 +532,6 @@ private fun DetailCard(
     }
 }
 
-
-
 @Composable
 private fun SpiralCanvasContent(
     onPointDrawn: (Float, Float, Long) -> Unit,
@@ -544,14 +548,14 @@ private fun SpiralCanvasContent(
         Column(horizontalAlignment = Alignment.Start) {
             Spacer(Modifier.height(16.dp))
             Text(
-                text = "Trace the Spiral",
+                text = stringResource(R.string.test_trace_spiral_title),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "Use your finger to trace the faint line.",
+                text = stringResource(R.string.test_trace_spiral_hint),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -636,7 +640,7 @@ private fun SpiralCanvasContent(
         }
 
         StabilaPrimaryButton(
-            text = "Finish Tracing",
+            text = stringResource(R.string.test_finish_tracing),
             onClick = onFinish,
             modifier = Modifier.fillMaxWidth()
         )

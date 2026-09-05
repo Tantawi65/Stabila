@@ -55,6 +55,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+import androidx.compose.ui.res.stringResource
+import com.stabila.core.R
+
 @Composable
 fun HistoryScreen(
     viewModel: HistoryViewModel = hiltViewModel()
@@ -65,8 +68,6 @@ fun HistoryScreen(
     
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    // Normally injected via Hilt into the ViewModel, but we can do a quick export here for simplicity
-    // A better approach is moving export to ViewModel, but context is needed for FileProvider.
     val pdfExporter = remember { PdfExporter(context) }
     var isExporting by remember { mutableStateOf(false) }
 
@@ -85,7 +86,7 @@ fun HistoryScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "History",
+                text = stringResource(R.string.history_title),
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontSize = (28 * adaptive.fontScale).sp
                 ),
@@ -104,7 +105,7 @@ fun HistoryScreen(
             item { Spacer(Modifier.width(16.dp)) }
             item {
                 FilterChip(
-                    text = "All",
+                    text = stringResource(R.string.history_filter_all),
                     isSelected = filterType == null,
                     onClick = { viewModel.setFilter(null) }
                 )
@@ -112,14 +113,14 @@ fun HistoryScreen(
 
             item {
                 FilterChip(
-                    text = "Action",
+                    text = stringResource(R.string.history_filter_action),
                     isSelected = filterType == TestType.ACTION,
                     onClick = { viewModel.setFilter(TestType.ACTION) }
                 )
             }
             item {
                 FilterChip(
-                    text = "Spiral",
+                    text = stringResource(R.string.history_filter_spiral),
                     isSelected = filterType == TestType.SPIRAL,
                     onClick = { viewModel.setFilter(TestType.SPIRAL) }
                 )
@@ -135,7 +136,7 @@ fun HistoryScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No readings found.",
+                    text = stringResource(R.string.history_empty),
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontSize = (16 * adaptive.fontScale).sp
                     ),
@@ -159,7 +160,7 @@ fun HistoryScreen(
 
             // PDF Export Button
             StabilaPrimaryButton(
-                text = if (isExporting) "Generating PDF..." else "Download PDF Report",
+                text = if (isExporting) stringResource(R.string.history_generating_pdf) else stringResource(R.string.history_download_pdf),
                 isLoading = isExporting,
                 modifier = Modifier.padding(horizontal = 24.dp),
                 onClick = {
@@ -188,7 +189,7 @@ fun HistoryScreen(
 
             // List
             Text(
-                text = "Recent Tests",
+                text = stringResource(R.string.history_recent_tests),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontSize = (16 * adaptive.fontScale).sp
                 ),
@@ -238,6 +239,11 @@ private fun FilterChip(
 private fun HistoryItemRow(reading: TremorReading) {
     val adaptive = LocalAdaptiveParams.current
     val df = remember { SimpleDateFormat("MMM dd, yyyy - HH:mm", Locale.getDefault()) }
+    val testTypeName = if (reading.testType == TestType.ACTION) {
+        stringResource(R.string.test_type_action)
+    } else {
+        stringResource(R.string.test_type_spiral)
+    }
     
     Row(
         modifier = Modifier
@@ -260,7 +266,7 @@ private fun HistoryItemRow(reading: TremorReading) {
             Spacer(Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = reading.testType.name.lowercase().replaceFirstChar { it.uppercase() } + " Test",
+                    text = stringResource(R.string.history_test_suffix, testTypeName),
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontSize = (16 * adaptive.fontScale).sp
                     ),
@@ -269,6 +275,11 @@ private fun HistoryItemRow(reading: TremorReading) {
                 )
                 val medicationTag = reading.medicationTag
                 if (medicationTag != null) {
+                    val medLabel = when (medicationTag) {
+                        "pre-dose" -> stringResource(R.string.test_medication_pre)
+                        "post-dose" -> stringResource(R.string.test_medication_post)
+                        else -> medicationTag
+                    }
                     Spacer(Modifier.width(8.dp))
                     Box(
                         modifier = Modifier
@@ -277,7 +288,7 @@ private fun HistoryItemRow(reading: TremorReading) {
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
                         Text(
-                            text = medicationTag,
+                            text = medLabel,
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = (11 * adaptive.fontScale).sp
                             ),

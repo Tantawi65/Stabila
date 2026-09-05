@@ -29,6 +29,9 @@ import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.math.sqrt
 
+import androidx.compose.ui.res.stringResource
+import com.stabila.app.R
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TouchStabilizerScreen(
@@ -37,14 +40,17 @@ fun TouchStabilizerScreen(
 ) {
     val touchStabilizerEnabled by viewModel.touchStabilizerEnabled.collectAsState(initial = false)
     val savedRadius by viewModel.touchTremorRadius.collectAsState(initial = 0f)
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val enableAccessibilityMsg = stringResource(R.string.stabilizer_please_enable_service)
+    val allowOverlayMsg = stringResource(R.string.stabilizer_please_allow_overlay)
     
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Touch Stabilizer") },
+                title = { Text(stringResource(R.string.stabilizer_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.generic_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -63,14 +69,14 @@ fun TouchStabilizerScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             Text(
-                text = "Global Touch Stabilizer",
+                text = stringResource(R.string.stabilizer_global_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
-                text = "The Touch Stabilizer intercepts your touches anywhere on your phone, averaging out tremor jitter to deliver a clean tap. Since everyone's tremor is different, we need to calibrate it to your fingers.",
+                text = stringResource(R.string.stabilizer_desc),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -94,19 +100,18 @@ fun TouchStabilizerScreen(
             ) {
                 Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
                     Text(
-                        text = "Enable System-Wide",
+                        text = stringResource(R.string.stabilizer_enable_system),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "Require Accessibility permission.",
+                        text = stringResource(R.string.stabilizer_require_accessibility),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 
-                val context = androidx.compose.ui.platform.LocalContext.current
                 Switch(
                     checked = touchStabilizerEnabled,
                     onCheckedChange = { enabled ->
@@ -117,10 +122,10 @@ fun TouchStabilizerScreen(
                             val isOverlayEnabled = android.provider.Settings.canDrawOverlays(context)
 
                             if (!isAccessibilityEnabled) {
-                                android.widget.Toast.makeText(context, "Please enable Stabila Accessibility Service", android.widget.Toast.LENGTH_LONG).show()
+                                android.widget.Toast.makeText(context, enableAccessibilityMsg, android.widget.Toast.LENGTH_LONG).show()
                                 context.startActivity(android.content.Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS))
                             } else if (!isOverlayEnabled) {
-                                android.widget.Toast.makeText(context, "Please allow Display Over Other Apps", android.widget.Toast.LENGTH_LONG).show()
+                                android.widget.Toast.makeText(context, allowOverlayMsg, android.widget.Toast.LENGTH_LONG).show()
                                 context.startActivity(android.content.Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:${context.packageName}")))
                             } else {
                                 viewModel.setTouchStabilizerEnabled(true)
@@ -170,18 +175,18 @@ fun CalibrationGameBox(
     ) {
         if (gameState == 0) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp)) {
-                Text("Advanced Calibration", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                Text(stringResource(R.string.stabilizer_advanced_calib), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("We will measure your natural touch pattern, including jitter radius, tap duration, and bounce tendencies.", textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.stabilizer_calib_desc), textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(onClick = { gameState = 1; currentTargetIndex = 0; maxRadiusCalculated = 0f; avgDurationCalculated = 0L }) {
-                    Text("Start Analysis")
+                    Text(stringResource(R.string.stabilizer_start_analysis))
                 }
             }
         } else if (gameState == 2) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Analysis Complete!",
+                    text = stringResource(R.string.stabilizer_analysis_complete),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
@@ -194,18 +199,18 @@ fun CalibrationGameBox(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Jitter Radius", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.stabilizer_jitter_radius), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text("${maxRadiusCalculated.toInt()} px", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Avg Duration", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.stabilizer_avg_duration), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text("${avgDurationCalculated} ms", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
                     }
                 }
                 
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(onClick = { gameState = 1; currentTargetIndex = 0; maxRadiusCalculated = 0f; avgDurationCalculated = 0L }) {
-                    Text("Recalibrate")
+                    Text(stringResource(R.string.stabilizer_recalibrate))
                 }
             }
         } else {
@@ -274,7 +279,7 @@ fun CalibrationGameBox(
                 }
                 
                 Text(
-                    text = "Tap the dot naturally (${currentTargetIndex + 1}/5)",
+                    text = stringResource(R.string.stabilizer_tap_dot_prompt, currentTargetIndex + 1, 5),
                     modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

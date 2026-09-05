@@ -15,6 +15,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.stabila.core.R
 import com.stabila.core.ui.components.StabilaPrimaryButton
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -27,10 +29,10 @@ fun KeyboardSetupScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Keyboard Setup") },
+                title = { Text(stringResource(R.string.keyboard_setup_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.generic_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -60,7 +62,7 @@ fun KeyboardSetupScreen(
             Spacer(modifier = Modifier.height(24.dp))
             
             Text(
-                text = "Adaptive Tremor Keyboard",
+                text = stringResource(R.string.keyboard_adaptive_title),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -69,7 +71,7 @@ fun KeyboardSetupScreen(
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                text = "To use the Stabila keyboard in other apps (like Messages or Browser), you need to enable it in your Android System Settings.",
+                text = stringResource(R.string.keyboard_setup_desc),
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -78,7 +80,7 @@ fun KeyboardSetupScreen(
             Spacer(modifier = Modifier.height(48.dp))
             
             StabilaPrimaryButton(
-                text = "Enable in Settings",
+                text = stringResource(R.string.keyboard_enable_button),
                 onClick = {
                     val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
                     context.startActivity(intent)
@@ -89,7 +91,7 @@ fun KeyboardSetupScreen(
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                text = "After enabling, tap the keyboard icon in your navigation bar when typing to switch to the Stabila Keyboard.",
+                text = stringResource(R.string.keyboard_post_enable_note),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
