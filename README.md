@@ -10,7 +10,6 @@
 [![Android SDK](https://img.shields.io/badge/Android-API%2028%2B-brightgreen.svg?style=flat&logo=android)](https://developer.android.com)
 [![Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-blue.svg?style=flat&logo=jetpackcompose)](https://developer.android.com/jetpack/compose)
 [![Architecture](https://img.shields.io/badge/Architecture-Multi--Module-orange.svg?style=flat)](#-architecture)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 **Stabila** is an assistive Android app designed to make everyday digital interactions easier for people experiencing hand tremors.
 
@@ -39,6 +38,9 @@ A keyboard designed with larger keys, touch-dampening, and haptic feedback to ma
 
 ### 🎨 Adaptive Interface
 Adjusts aspects of the interface based on the user's tremor level to make important controls easier to interact with.
+
+### 🌐 Full Arabic & English Localization
+Complete bilingual support with in-app language switching between English and Arabic (العربية), featuring dynamic Right-to-Left (RTL) layout mirroring across all screens and features.
 
 ---
 

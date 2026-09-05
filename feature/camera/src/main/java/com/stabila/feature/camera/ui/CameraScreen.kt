@@ -93,6 +93,9 @@ import androidx.compose.ui.input.key.type
 
 
 
+import androidx.compose.ui.res.stringResource
+import com.stabila.core.R
+
 @Composable
 fun CameraScreen(
     viewModel: CameraViewModel = hiltViewModel()
@@ -125,9 +128,10 @@ fun CameraScreen(
     }
 
     // Show a Toast when the photo is saved to gallery
+    val savedToastMessage = stringResource(R.string.camera_photo_saved_toast)
     LaunchedEffect(uiState.savedToGallery) {
         if (uiState.savedToGallery) {
-            android.widget.Toast.makeText(context, "📷 Photo saved to Gallery → Pictures/Stabila", android.widget.Toast.LENGTH_LONG).show()
+            android.widget.Toast.makeText(context, savedToastMessage, android.widget.Toast.LENGTH_LONG).show()
         }
     }
 
@@ -207,7 +211,7 @@ fun CameraScreen(
 
     if (!hasPermission) {
         Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
-            Text("Camera permission required", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.camera_permission_required), color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         return
     }
@@ -241,12 +245,12 @@ fun CameraScreen(
                     Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                         Image(
                             bitmap = uiState.originalBitmap!!.asImageBitmap(),
-                            contentDescription = "Original",
+                            contentDescription = stringResource(R.string.camera_original_label),
                             modifier = Modifier.fillMaxSize(),
                             contentScale = androidx.compose.ui.layout.ContentScale.Fit
                         )
                         Text(
-                            text = "Original (Blurry)",
+                            text = stringResource(R.string.camera_original_label),
                             color = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
@@ -261,12 +265,12 @@ fun CameraScreen(
                     Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                         Image(
                             bitmap = uiState.resultBitmap!!.asImageBitmap(),
-                            contentDescription = "Enhanced",
+                            contentDescription = stringResource(R.string.camera_enhanced_label),
                             modifier = Modifier.fillMaxSize(),
                             contentScale = androidx.compose.ui.layout.ContentScale.Fit
                         )
                         Text(
-                            text = "Enhanced (Stabilized)",
+                            text = stringResource(R.string.camera_enhanced_label),
                             color = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
@@ -281,7 +285,7 @@ fun CameraScreen(
                 // Show standard result
                 Image(
                     bitmap = uiState.resultBitmap!!.asImageBitmap(),
-                    contentDescription = "Result",
+                    contentDescription = stringResource(R.string.camera_enhanced_label),
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -297,7 +301,7 @@ fun CameraScreen(
                         .padding(horizontal = 20.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Text("✓ Saved to Gallery", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold, fontSize = (14 * adaptive.fontScale).sp)
+                    Text(stringResource(R.string.camera_saved_banner), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold, fontSize = (14 * adaptive.fontScale).sp)
                 }
             }
 
@@ -309,7 +313,7 @@ fun CameraScreen(
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
             ) {
-                Icon(Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onBackground)
+                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.generic_cancel), tint = MaterialTheme.colorScheme.onBackground)
             }
         } else {
             val lifecycleOwner = LocalLifecycleOwner.current
@@ -414,7 +418,7 @@ fun CameraScreen(
                         if (uiState.isOutdoorBright) {
                             androidx.compose.foundation.layout.Spacer(Modifier.width(8.dp))
                             Text(
-                                text = "☀ High Light",
+                                text = stringResource(R.string.camera_high_light),
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = (12 * adaptive.fontScale).sp,
@@ -437,7 +441,7 @@ fun CameraScreen(
                             .padding(horizontal = 14.dp, vertical = 6.dp)
                     ) {
                         Text(
-                            text = if (uiState.isCompareMode) "Compare ON" else "Compare",
+                            text = if (uiState.isCompareMode) stringResource(R.string.camera_compare_on) else stringResource(R.string.camera_compare),
                             color = MaterialTheme.colorScheme.onBackground,
                             fontWeight = if (uiState.isCompareMode) FontWeight.Bold else FontWeight.Normal,
                             fontSize = (13 * adaptive.fontScale).sp
@@ -465,7 +469,7 @@ fun CameraScreen(
                     androidx.compose.foundation.layout.Spacer(Modifier.height(16.dp))
                     Text(
                         text = if (uiState.cameraState == CameraViewModel.CameraState.STABILIZING)
-                            "Analysing frames…" else "Enhancing…",
+                            stringResource(R.string.camera_analysing_frames) else stringResource(R.string.camera_enhancing),
                         color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = (16 * adaptive.fontScale).sp
@@ -495,7 +499,7 @@ fun CameraScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            "Brightness",
+                            text = stringResource(R.string.camera_brightness),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = (11 * adaptive.fontScale).sp,
                             fontWeight = FontWeight.Medium
@@ -521,7 +525,10 @@ fun CameraScreen(
                             .background(MaterialTheme.colorScheme.surfaceVariant),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        listOf("Texture" to false, "Smooth" to true).forEach { (label, mode) ->
+                        listOf(
+                            stringResource(R.string.camera_texture) to false,
+                            stringResource(R.string.camera_smooth) to true
+                        ).forEach { (label, mode) ->
                             val selected = isSmoothMode == mode
                             Box(
                                 modifier = Modifier

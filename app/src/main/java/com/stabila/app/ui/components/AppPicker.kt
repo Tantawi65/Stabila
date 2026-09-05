@@ -43,6 +43,9 @@ import androidx.core.graphics.drawable.toBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+import androidx.compose.ui.res.stringResource
+import com.stabila.app.R
+
 data class AppInfo(
     val packageName: String,
     val name: String,
@@ -95,7 +98,7 @@ fun AppPickerDialog(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Select Apps for Auto-Scroll",
+                    text = stringResource(R.string.autoscroll_select_dialog_title),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
@@ -161,10 +164,10 @@ fun AppPickerDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismissRequest) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.generic_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     TextButton(onClick = { onAppsSelected(selectedApps.toSet()) }) {
-                        Text("Save", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.generic_save), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                     }
                 }
             }

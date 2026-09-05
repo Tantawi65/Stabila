@@ -28,8 +28,8 @@ class ReminderReceiver : BroadcastReceiver() {
 
         val builder = NotificationCompat.Builder(context, "daily_test_channel")
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Daily Tremor Test")
-            .setContentText("It's time for your daily tremor test to track your progress.")
+            .setContentTitle(context.getString(com.stabila.app.R.string.notification_reminder_title))
+            .setContentText(context.getString(com.stabila.app.R.string.notification_reminder_body))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)

@@ -53,16 +53,17 @@ import com.stabila.app.ui.components.AppPickerDialog
 import com.stabila.core.ui.LocalAdaptiveParams
 import androidx.compose.ui.unit.sp
 
+import androidx.compose.ui.res.stringResource
+import com.stabila.core.R
+
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val notifications by viewModel.notifications.collectAsState()
     val reminderTime by viewModel.reminderTime.collectAsState()
-    val autoScrollSpeed by viewModel.autoScrollSpeed.collectAsState(initial = 3f)
-    val enabledScrollApps by viewModel.enabledScrollApps.collectAsState(initial = emptySet())
-    val isGlobalEnabled = enabledScrollApps.contains("all")
     val themePreference by viewModel.themePreference.collectAsState(initial = "SYSTEM")
+    val languagePreference by viewModel.languagePreference.collectAsState(initial = "SYSTEM")
     val context = LocalContext.current
     val adaptive = LocalAdaptiveParams.current
 
@@ -85,7 +86,7 @@ fun SettingsScreen(
             .padding(24.dp)
     ) {
         Text(
-            text = "Settings",
+            text = stringResource(R.string.settings_title),
             style = MaterialTheme.typography.headlineLarge.copy(
                 fontSize = (32 * adaptive.fontScale).sp
             ),
@@ -94,9 +95,9 @@ fun SettingsScreen(
             modifier = Modifier.padding(bottom = adaptive.spacingUnit * 2, top = adaptive.spacingUnit)
         )
 
-        // Theme Selection
+        // Language Selection
         Text(
-            text = "App Theme",
+            text = stringResource(R.string.settings_language_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onBackground,
             fontWeight = FontWeight.Bold,
@@ -106,31 +107,71 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 24.dp)
-                .background(MaterialTheme.colorScheme.surface, androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
                 .padding(4.dp),
-            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            val options = listOf("SYSTEM" to "System", "LIGHT" to "Light", "DARK" to "Dark")
-            options.forEach { (value, label) ->
-                val isSelected = themePreference == value
+            val languageOptions = listOf(
+                "SYSTEM" to stringResource(R.string.settings_language_system),
+                "en" to stringResource(R.string.settings_language_en),
+                "ar" to stringResource(R.string.settings_language_ar)
+            )
+            languageOptions.forEach { (value, label) ->
+                val isSelected = languagePreference == value
                 androidx.compose.material3.TextButton(
-                    onClick = { viewModel.setThemePreference(value) },
+                    onClick = { viewModel.setLanguagePreference(value) },
                     modifier = Modifier.weight(1f),
-                    colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
+                    colors = ButtonDefaults.textButtonColors(
                         containerColor = if (isSelected) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Transparent,
                         contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                     ),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(text = label, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
                 }
             }
         }
 
+        // Theme Selection
+        Text(
+            text = stringResource(R.string.settings_theme_title),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp)
+                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
+                .padding(4.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            val themeOptions = listOf(
+                "SYSTEM" to stringResource(R.string.settings_theme_system),
+                "LIGHT" to stringResource(R.string.settings_theme_light),
+                "DARK" to stringResource(R.string.settings_theme_dark)
+            )
+            themeOptions.forEach { (value, label) ->
+                val isSelected = themePreference == value
+                androidx.compose.material3.TextButton(
+                    onClick = { viewModel.setThemePreference(value) },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.textButtonColors(
+                        containerColor = if (isSelected) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Transparent,
+                        contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(text = label, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+                }
+            }
+        }
 
         SettingsToggle(
-            title = "Daily Reminders",
-            description = "Receive notifications to take your daily tremor test.",
+            title = stringResource(R.string.settings_reminders_title),
+            description = stringResource(R.string.settings_reminders_desc),
             checked = notifications,
             onCheckedChange = { checked ->
                 if (checked) {
@@ -173,12 +214,19 @@ fun SettingsScreen(
                     .padding(8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Reminder Time", color = MaterialTheme.colorScheme.onBackground, fontSize = (16 * adaptive.fontScale).sp)
-                Text(reminderTime, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = (16 * adaptive.fontScale).sp)
+                Text(
+                    text = stringResource(R.string.settings_reminder_time),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontSize = (16 * adaptive.fontScale).sp
+                )
+                Text(
+                    text = reminderTime,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = (16 * adaptive.fontScale).sp
+                )
             }
         }
-
-
     }
 }
 
@@ -226,3 +274,4 @@ private fun SettingsToggle(
         )
     }
 }
+

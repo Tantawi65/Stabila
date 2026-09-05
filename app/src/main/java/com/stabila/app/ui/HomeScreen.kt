@@ -1,5 +1,7 @@
 package com.stabila.app.ui
 
+import androidx.compose.ui.res.stringResource
+import com.stabila.core.R
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.EaseInOutCubic
 import androidx.compose.animation.core.animateFloatAsState
@@ -87,7 +89,7 @@ fun HomeScreen(
         ) {
             Column {
                 Text(
-                    text = "Stabila",
+                    text = stringResource(R.string.app_name),
                     style = MaterialTheme.typography.headlineLarge.copy(
                         fontSize = (26 * adaptive.fontScale).sp,
                         fontWeight = FontWeight.Bold
@@ -95,7 +97,7 @@ fun HomeScreen(
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
-                    text = "Tremor Intelligence",
+                    text = stringResource(R.string.app_tagline),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium
@@ -132,8 +134,8 @@ fun HomeScreen(
         ) {
             val bannerColor = if (adaptive.tremorLevel == TremorLevel.SEVERE) Red500 else Amber500
             val bannerMsg = when (adaptive.tremorLevel) {
-                TremorLevel.ELEVATED -> "Elevated Tremor Day — Larger Controls Active"
-                TremorLevel.SEVERE -> "High Tremor Day — Accessibility Mode Active"
+                TremorLevel.ELEVATED -> stringResource(R.string.home_elevated_banner)
+                TremorLevel.SEVERE -> stringResource(R.string.home_severe_banner)
                 else -> ""
             }
             Row(
@@ -236,10 +238,10 @@ fun HomeScreen(
 
                 Text(
                     text = when {
-                        score < 0f -> "No tests yet — take your first test"
-                        score < 30f -> "Stable Day — You're doing great"
-                        score < 65f -> "Mild Tremor — Normal variation"
-                        else -> "High Tremor — See your doctor if persistent"
+                        score < 0f -> stringResource(R.string.home_score_empty)
+                        score < 30f -> stringResource(R.string.home_score_stable)
+                        score < 65f -> stringResource(R.string.home_score_mild)
+                        else -> stringResource(R.string.home_score_high)
                     },
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontSize = (14 * adaptive.fontScale).sp
@@ -252,7 +254,7 @@ fun HomeScreen(
                 if (score >= 0f) {
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = "Latest test score",
+                        text = stringResource(R.string.home_score_latest_label),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -264,7 +266,7 @@ fun HomeScreen(
 
         // ── Quick Actions ─────────────────────────────────────────────────────
         Text(
-            text = "Quick Actions",
+            text = stringResource(R.string.home_quick_actions),
             style = MaterialTheme.typography.titleLarge.copy(
                 fontSize = (16 * adaptive.fontScale).sp
             ),
@@ -280,8 +282,8 @@ fun HomeScreen(
             Column(verticalArrangement = Arrangement.spacedBy(adaptive.spacingUnit / 2)) {
                 ActionCard(
                     modifier = Modifier.fillMaxWidth(),
-                    title = "Daily Test",
-                    subtitle = "Check your tremor",
+                    title = stringResource(R.string.home_action_test_title),
+                    subtitle = stringResource(R.string.home_action_test_subtitle),
                     icon = Icons.Default.MonitorHeart,
                     accentColor = MaterialTheme.colorScheme.primary,
                     adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
@@ -289,8 +291,8 @@ fun HomeScreen(
                 )
                 ActionCard(
                     modifier = Modifier.fillMaxWidth(),
-                    title = "SteadyCam",
-                    subtitle = "Stabilized photos",
+                    title = stringResource(R.string.home_action_camera_title),
+                    subtitle = stringResource(R.string.home_action_camera_subtitle),
                     icon = Icons.Default.CameraAlt,
                     accentColor = Violet500,
                     adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
@@ -298,8 +300,8 @@ fun HomeScreen(
                 )
                 ActionCard(
                     modifier = Modifier.fillMaxWidth(),
-                    title = "History",
-                    subtitle = "Past results & PDF",
+                    title = stringResource(R.string.home_action_history_title),
+                    subtitle = stringResource(R.string.home_action_history_subtitle),
                     icon = Icons.Default.History,
                     accentColor = Emerald500,
                     adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
@@ -307,8 +309,8 @@ fun HomeScreen(
                 )
                 ActionCard(
                     modifier = Modifier.fillMaxWidth(),
-                    title = "Auto-Scroll",
-                    subtitle = "Manage scrolling",
+                    title = stringResource(R.string.home_action_autoscroll_title),
+                    subtitle = stringResource(R.string.home_action_autoscroll_subtitle),
                     icon = Icons.Default.Keyboard,
                     accentColor = MaterialTheme.colorScheme.primary,
                     adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
@@ -316,8 +318,8 @@ fun HomeScreen(
                 )
                 ActionCard(
                     modifier = Modifier.fillMaxWidth(),
-                    title = "Adaptive Keyboard",
-                    subtitle = "Setup & enable",
+                    title = stringResource(R.string.home_action_keyboard_title),
+                    subtitle = stringResource(R.string.home_action_keyboard_subtitle),
                     icon = Icons.Default.Keyboard,
                     accentColor = MaterialTheme.colorScheme.primary,
                     adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
@@ -325,8 +327,8 @@ fun HomeScreen(
                 )
                 ActionCard(
                     modifier = Modifier.fillMaxWidth(),
-                    title = "Touch Stabilizer",
-                    subtitle = "Smart touch filter",
+                    title = stringResource(R.string.home_action_stabilizer_title),
+                    subtitle = stringResource(R.string.home_action_stabilizer_subtitle),
                     icon = Icons.Default.TouchApp,
                     accentColor = MaterialTheme.colorScheme.tertiary,
                     adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
@@ -334,8 +336,8 @@ fun HomeScreen(
                 )
                 ActionCard(
                     modifier = Modifier.fillMaxWidth(),
-                    title = "Settings",
-                    subtitle = "App preferences",
+                    title = stringResource(R.string.home_action_settings_title),
+                    subtitle = stringResource(R.string.home_action_settings_subtitle),
                     icon = Icons.Default.Settings,
                     accentColor = Amber500,
                     adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
@@ -351,8 +353,8 @@ fun HomeScreen(
                 ) {
                     ActionCard(
                         modifier = Modifier.weight(1f),
-                        title = "Daily Test",
-                        subtitle = "Check your tremor",
+                        title = stringResource(R.string.home_action_test_title),
+                        subtitle = stringResource(R.string.home_action_test_subtitle),
                         icon = Icons.Default.MonitorHeart,
                         accentColor = MaterialTheme.colorScheme.primary,
                         adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
@@ -360,8 +362,8 @@ fun HomeScreen(
                     )
                     ActionCard(
                         modifier = Modifier.weight(1f),
-                        title = "SteadyCam",
-                        subtitle = "Stabilized photos",
+                        title = stringResource(R.string.home_action_camera_title),
+                        subtitle = stringResource(R.string.home_action_camera_subtitle),
                         icon = Icons.Default.CameraAlt,
                         accentColor = Violet500,
                         adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
@@ -374,8 +376,8 @@ fun HomeScreen(
                 ) {
                     ActionCard(
                         modifier = Modifier.weight(1f),
-                        title = "History",
-                        subtitle = "Past results & PDF",
+                        title = stringResource(R.string.home_action_history_title),
+                        subtitle = stringResource(R.string.home_action_history_subtitle),
                         icon = Icons.Default.History,
                         accentColor = Emerald500,
                         adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
@@ -383,8 +385,8 @@ fun HomeScreen(
                     )
                     ActionCard(
                         modifier = Modifier.weight(1f),
-                        title = "Auto-Scroll",
-                        subtitle = "Manage scrolling",
+                        title = stringResource(R.string.home_action_autoscroll_title),
+                        subtitle = stringResource(R.string.home_action_autoscroll_subtitle),
                         icon = Icons.Default.Keyboard,
                         accentColor = MaterialTheme.colorScheme.primary,
                         adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
@@ -397,8 +399,8 @@ fun HomeScreen(
                 ) {
                     ActionCard(
                         modifier = Modifier.weight(1f),
-                        title = "Adaptive Keyboard",
-                        subtitle = "Setup & enable",
+                        title = stringResource(R.string.home_action_keyboard_title),
+                        subtitle = stringResource(R.string.home_action_keyboard_subtitle),
                         icon = Icons.Default.Keyboard,
                         accentColor = MaterialTheme.colorScheme.primary,
                         adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
@@ -406,8 +408,8 @@ fun HomeScreen(
                     )
                     ActionCard(
                         modifier = Modifier.weight(1f),
-                        title = "Touch Stabilizer",
-                        subtitle = "Smart touch filter",
+                        title = stringResource(R.string.home_action_stabilizer_title),
+                        subtitle = stringResource(R.string.home_action_stabilizer_subtitle),
                         icon = Icons.Default.TouchApp,
                         accentColor = MaterialTheme.colorScheme.tertiary,
                         adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),
@@ -417,8 +419,8 @@ fun HomeScreen(
                 
                 ActionCard(
                     modifier = Modifier.fillMaxWidth(),
-                    title = "Settings",
-                    subtitle = "App preferences",
+                    title = stringResource(R.string.home_action_settings_title),
+                    subtitle = stringResource(R.string.home_action_settings_subtitle),
                     icon = Icons.Default.Settings,
                     accentColor = Amber500,
                     adaptiveHeight = (120 * adaptive.fontScale).dp.coerceIn(110.dp, 160.dp),

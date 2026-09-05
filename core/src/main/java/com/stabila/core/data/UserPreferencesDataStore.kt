@@ -47,6 +47,8 @@ class UserPreferencesDataStore @Inject constructor(
         val KEY_AUTO_SCROLL_BUTTON_Y = floatPreferencesKey("auto_scroll_button_y")
         // Theme Setting
         val KEY_THEME_PREFERENCE = stringPreferencesKey("theme_preference")
+        // Language Setting
+        val KEY_LANGUAGE_PREFERENCE = stringPreferencesKey("language_preference")
 
         // Defaults
         const val DEFAULT_DEBOUNCE_WINDOW_MS = 120L
@@ -153,6 +155,14 @@ class UserPreferencesDataStore @Inject constructor(
 
     suspend fun setThemePreference(theme: String) {
         context.dataStore.edit { it[KEY_THEME_PREFERENCE] = theme }
+    }
+
+    val languagePreference: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[KEY_LANGUAGE_PREFERENCE] ?: "SYSTEM"
+    }
+
+    suspend fun setLanguagePreference(language: String) {
+        context.dataStore.edit { it[KEY_LANGUAGE_PREFERENCE] = language }
     }
 
     // Touch Stabilizer Settings

@@ -89,6 +89,14 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    val languagePreference = userPrefs.languagePreference
+
+    fun setLanguagePreference(language: String) {
+        viewModelScope.launch {
+            userPrefs.setLanguagePreference(language)
+        }
+    }
+
     val touchStabilizerEnabled = userPrefs.touchStabilizerEnabled
 
     fun setTouchStabilizerEnabled(enabled: Boolean) {

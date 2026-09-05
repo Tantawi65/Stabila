@@ -433,9 +433,9 @@ private fun MagnifiedKeyboard(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(Icons.Default.ArrowDownward, contentDescription = "Tap to Cancel")
+            Icon(Icons.Default.ArrowDownward, contentDescription = androidx.compose.ui.res.stringResource(com.stabila.core.R.string.keyboard_tap_to_cancel))
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Cancel (Tap here)", style = MaterialTheme.typography.bodyMedium)
+            Text(androidx.compose.ui.res.stringResource(com.stabila.core.R.string.keyboard_cancel_tap), style = MaterialTheme.typography.bodyMedium)
         }
 
         // Dynamic Grid

@@ -23,6 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.res.stringResource
+import com.stabila.app.R
 import com.stabila.app.ui.components.AppPickerDialog
 import com.stabila.core.ui.LocalAdaptiveParams
 
@@ -51,10 +53,10 @@ fun AutoScrollScreen(
             modifier = Modifier.padding(bottom = adaptive.spacingUnit * 2, top = adaptive.spacingUnit)
         ) {
             IconButton(onClick = onNavigateBack, modifier = Modifier.padding(end = 8.dp)) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.generic_back))
             }
             Text(
-                text = "Auto-Scroll Setup",
+                text = stringResource(R.string.autoscroll_setup_title),
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontSize = (24 * adaptive.fontScale).sp
                 ),
@@ -77,13 +79,13 @@ fun AutoScrollScreen(
         ) {
             Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
                 Text(
-                    text = if (isMasterEnabled) "Auto-Scroll is On" else "Auto-Scroll is Off",
+                    text = if (isMasterEnabled) stringResource(R.string.autoscroll_is_on) else stringResource(R.string.autoscroll_is_off),
                     style = MaterialTheme.typography.titleMedium.copy(fontSize = (16 * adaptive.fontScale).sp),
                     color = if (isMasterEnabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Master toggle to enable or disable the feature entirely.",
+                    text = stringResource(R.string.autoscroll_master_desc),
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = (12 * adaptive.fontScale).sp),
                     color = if (isMasterEnabled) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -105,7 +107,7 @@ fun AutoScrollScreen(
             Column {
                 // Accessibility Permission
                 Text(
-                    text = "Permissions",
+                    text = stringResource(R.string.autoscroll_permissions_title),
             style = MaterialTheme.typography.titleMedium.copy(
                 fontSize = (16 * adaptive.fontScale).sp
             ),
@@ -125,11 +127,11 @@ fun AutoScrollScreen(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.Keyboard, contentDescription = "Accessibility", tint = MaterialTheme.colorScheme.primary)
+            Icon(Icons.Default.Keyboard, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Column(modifier = Modifier.padding(start = adaptive.spacingUnit)) {
-                Text("Enable Auto-Scroll Service", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold, fontSize = (16 * adaptive.fontScale).sp)
-                Text("Go to Installed apps -> Stabila, and enable it.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = (12 * adaptive.fontScale).sp))
-                Text("Android 13+: If it's greyed out, first go to Stabila's App Info -> 'Allow Restricted Settings'", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = (11 * adaptive.fontScale).sp))
+                Text(stringResource(R.string.autoscroll_enable_service_title), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold, fontSize = (16 * adaptive.fontScale).sp)
+                Text(stringResource(R.string.autoscroll_enable_service_desc), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = (12 * adaptive.fontScale).sp))
+                Text(stringResource(R.string.autoscroll_restricted_desc), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = (11 * adaptive.fontScale).sp))
             }
         }
 
@@ -147,10 +149,10 @@ fun AutoScrollScreen(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.Keyboard, contentDescription = "Overlay", tint = MaterialTheme.colorScheme.primary)
+            Icon(Icons.Default.Keyboard, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Column(modifier = Modifier.padding(start = adaptive.spacingUnit)) {
-                Text("Allow Display Over Other Apps", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold, fontSize = (16 * adaptive.fontScale).sp)
-                Text("Required for the floating control button", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = (12 * adaptive.fontScale).sp))
+                Text(stringResource(R.string.autoscroll_overlay_title), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold, fontSize = (16 * adaptive.fontScale).sp)
+                Text(stringResource(R.string.autoscroll_overlay_desc), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = (12 * adaptive.fontScale).sp))
             }
         }
 
@@ -158,7 +160,7 @@ fun AutoScrollScreen(
 
         // Speed settings
         Text(
-            text = "Auto-Scroll Speed",
+            text = stringResource(R.string.autoscroll_speed_title),
             style = MaterialTheme.typography.titleMedium.copy(
                 fontSize = (16 * adaptive.fontScale).sp
             ),
@@ -167,7 +169,7 @@ fun AutoScrollScreen(
             modifier = Modifier.padding(bottom = 8.dp)
         )
         Text(
-            text = "Predefined speeds designed for users with tremors.",
+            text = stringResource(R.string.autoscroll_speed_desc),
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontSize = (14 * adaptive.fontScale).sp
             ),
@@ -198,7 +200,7 @@ fun AutoScrollScreen(
 
         // Target Apps Selection
         Text(
-            text = "Target Apps",
+            text = stringResource(R.string.autoscroll_target_apps_title),
             style = MaterialTheme.typography.titleMedium.copy(
                 fontSize = (16 * adaptive.fontScale).sp
             ),
@@ -214,14 +216,14 @@ fun AutoScrollScreen(
         ) {
             Column(modifier = Modifier.weight(1f).padding(end = adaptive.spacingUnit)) {
                 Text(
-                    text = "Enable Globally",
+                    text = stringResource(R.string.autoscroll_enable_globally_title),
                     style = MaterialTheme.typography.titleMedium.copy(fontSize = (16 * adaptive.fontScale).sp),
                     color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Auto-Scroll activates in all apps.",
+                    text = stringResource(R.string.autoscroll_enable_globally_desc),
                     style = MaterialTheme.typography.bodyMedium.copy(fontSize = (14 * adaptive.fontScale).sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -256,10 +258,10 @@ fun AutoScrollScreen(
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.Keyboard, contentDescription = "Apps", tint = MaterialTheme.colorScheme.primary)
+                Icon(Icons.Default.Keyboard, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Column(modifier = Modifier.padding(start = adaptive.spacingUnit)) {
-                    val count = if (enabledApps.isEmpty()) "None" else " selected"
-                    Text("Select Specific Apps", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold, fontSize = (16 * adaptive.fontScale).sp)
+                    val count = if (enabledApps.isEmpty()) stringResource(R.string.autoscroll_none) else stringResource(R.string.autoscroll_selected_count, enabledApps.size)
+                    Text(stringResource(R.string.autoscroll_select_specific_apps), color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold, fontSize = (16 * adaptive.fontScale).sp)
                     Text(count, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = (12 * adaptive.fontScale).sp))
                 }
             }
